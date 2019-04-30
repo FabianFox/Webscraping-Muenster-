@@ -39,7 +39,7 @@ should acquire basic knowledge of the [tidyverse](https://www.tidyverse.org/).
 This can be achieved by reading the chapter 1 and 4-6 from the freely available 
 "([R for Data Science](https://r4ds.had.co.nz/)). If you are more the interactive 
 type of learner, I recommend the (free) courses by [RStudio](https://rstudio.cloud/learn/primers). 
-In particular, the three modules in "(Working with Data)[https://rstudio.cloud/learn/primers/2]" 
+In particular, the three modules in "[Working with Data](https://rstudio.cloud/learn/primers/2)" 
 are great resources. If that is still not enough, there is also a [YaRrr! The Pirate’s Guide to R](https://bookdown.org/ndphillips/YaRrr/). 
 
 Finally, please bring a laptop with the latest version of R and RStudio installed. 
