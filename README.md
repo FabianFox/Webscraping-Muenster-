@@ -2,7 +2,7 @@
 
 ## General information
 
-**Zusammenfassung**
+**Abstract**
 
 > If programming is magic, then *web scraping* is wizardry (Mitchell 2015: vii)
 
@@ -16,7 +16,7 @@ Throughout the workshop, several hands-on examples will be used. In this way, th
 participants are equipped with the necessary knowledge to set up their own webscraping
 projects.
 
-**Organisation**
+**Organization**
 
 [Jun.-Prof. Dr. Annie Waldherr](https://www.uni-muenster.de/Kowi/personen/annie-waldherr.html), 
 Department of Communication, University of Münster
@@ -25,7 +25,7 @@ Department of Communication, University of Münster
 
 17 April 2019, 9 a.m.-12:30 p.m., WWU Münster
 
-**Vortrag** 
+**Presentation** 
 
 Fabian Gülzau, HU Berlin ([Website](https://fguelzau.rbind.io/), [Twitter](https://twitter.com/FabFuchs))
 
