@@ -90,14 +90,14 @@ Weiterführend:
 
 ---
 
-# Kursvoraussetzung
+# Kursvorbereitung
 
 Installationen:
 - R und RStudio
 - [tidyverse](https://www.tidyverse.org/packages/) ([Installation](https://r4ds.had.co.nz/introduction.html#the-tidyverse)) 
 - Internetverbindung...
 
-Vorbereitung:
+Mögliche Vorbereitung:
 - R for Data Science 
     - Kapitel: [1](https://r4ds.had.co.nz/introduction.html), [2](https://r4ds.had.co.nz/explore-intro.html), ([3](https://r4ds.had.co.nz/data-visualisation.html)), [4](https://r4ds.had.co.nz/workflow-basics.html), [5](https://r4ds.had.co.nz/transform.html), [6](https://r4ds.had.co.nz/workflow-scripts.html) 
     - Kap. 3 "Visualisierung" ist nicht notwendig aber empfehlenswert
