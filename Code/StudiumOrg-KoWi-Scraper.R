@@ -89,7 +89,11 @@ uni.df <- uni.df %>%
     var = rep(var.names, length(unique(name)))
   ) %>%
   spread(var, value) %>%
-  clean_names()
+  clean_names() %>%
+  select(-v1)
+
+# Rename a "th-koeln" which is wrongly named "onlineredakteur"
+uni.df[which(uni.df$name == "onlineredakteur"),]$name <- "th-koeln"
 
 # Visualize
 ## ---------------------------------------------------------------------- ##
