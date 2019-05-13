@@ -90,6 +90,10 @@ uni.df <- uni.df %>%
   ) %>%
   spread(var, value) %>%
   clean_names() %>%
+  mutate(einwohnerzahl_stadt = ifelse(einwohnerzahl_stadt <= 999, # population too small on website
+    einwohnerzahl_stadt * 1000,
+    einwohnerzahl_stadt
+  )) %>%
   select(-v1)
 
 # Rename a "th-koeln" which is wrongly named "onlineredakteur"
