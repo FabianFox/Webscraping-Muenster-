@@ -23,7 +23,7 @@ Department of Communication, University of Münster
 
 **Date and Location**
 
-17 April 2019, 9 a.m.-12:30 p.m., WWU Münster
+17 May 2019, 9 a.m.-12:30 p.m., WWU Münster
 
 **Presentation** 
 
@@ -46,3 +46,6 @@ Finally, please bring a laptop with the latest version of R and RStudio installe
 Also install the following packages:
 
 - [tidyverse](https://www.tidyverse.org/packages/)
+- [devtools](https://github.com/r-lib/devtools)
+- [janitor](https://github.com/sfirke/janitor)
+- [qdap](https://github.com/trinker/qdap)
