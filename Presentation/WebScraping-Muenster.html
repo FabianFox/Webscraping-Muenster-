@@ -1,0 +1,1113 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+  <head>
+    <title>Web Scraping mit R</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Fabian Gülzau" />
+    <link href="libs/remark-css/default.css" rel="stylesheet" />
+    <link href="libs/remark-css/default-fonts.css" rel="stylesheet" />
+    <script src="libs/htmlwidgets/htmlwidgets.js"></script>
+    <link href="libs/str_view/str_view.css" rel="stylesheet" />
+    <script src="libs/str_view-binding/str_view.js"></script>
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Web Scraping mit R
+### Fabian Gülzau
+### Humboldt-Universität zu Berlin
+### 2019/05/17
+
+---
+
+
+# Inhalt
+
+
+
+1. Einleitung
+2. Crashkurs R
+3. Web Scraping
+    + Technologien des WWW
+    + Web Scraping in R
+        + a) Generelles Schema
+        + b) Spezielle Technologien
+4. Rechtliche &amp; ethische Aspekte
+5. Weitere Beispiele und Anwendungen
+6. Weiterlernen
+
+---
+
+# Zur Präsentation
+
+- Folien sind online verfügbar: https://goo.gl/erTCX7
+    - Folien herunterladen und im Browser öffnen
+- Beispiele auf [GitHub](https://github.com/FabianFox/Webscraping-Muenster-)
+- Benötigte Pakete über: 
+
+
+```r
+install.packages(pacman) # Installation nur einmal notwendig
+library(pacman)
+p_load(tidyverse, rvest, httr, robotstxt, qdap, janitor,
+       devtools, lubridate)
+```
+
+---
+
+# 1. Einleitung
+
+Ziele des Workshops
+
+---
+
+# 2. Crashkurs R
+
+- Fokus auf Datentypen &amp; -aufbereitung mit [dplyr](https://dplyr.tidyverse.org/)
+- Daten zur [Studienwahl](https://www.studium.org/kommunikationswissenschaft/uebersicht-universitaeten) im Feld "Medien- und Kommunikationswissenschaften"
+
+Nachlesen:
+
+- Wickham &amp; Grolemund (2017) ["R for Data Science"](https://r4ds.had.co.nz/)
+- Tutorial von [RStudio](https://rstudio.cloud/learn/primers)
+
+---
+
+# Datentypen
+
+
+
+---
+
+# Daten: Studium.org
+
+&lt;img src="Figures/StudiumOrg-Muenster.PNG" width="80%" /&gt;
+
+Studienwahl: Medien- und Kommunikationswissenschaften
+
+- Wo soll ich studieren?
+- Was gibt mein Geldbeutel her?
+- Was bietet der Studienort an kulturellen Angeboten?
+
+---
+
+# Daten: Studium.org II
+
+- 56 Datenpunkte (eben soviele Einzelseiten, z.B. [Münster](https://www.studium.org/kommunikationswissenschaft/uni-muenster))
+- Copy&amp;Paste mühsam und fehleranfällig
+- Anwendungsbeispiel: Web Scraping (s. [Skript](https://github.com/FabianFox/Webscraping-Muenster-/blob/master/Code/StudiumOrg-KoWi-Scraper.R))
+
+Datensatz laden:
+
+
+```r
+# empfohlen
+studium.df &lt;- readRDS(gzcon(url("https://github.com/FabianFox/Webscraping-Muenster-/blob/master/Data/KoWi-Institute.RDS?raw=true")))
+
+# Skript ausführen (Dauer: ~5min)
+# devtools::source_url("https://raw.githubusercontent.com/FabianFox/Webscraping-Hamburg-/master/Code/SoziologieOrg-Scraper.R")
+```
+
+---
+
+# Daten: Studium.org III
+
+Welche Variablen stehen zur Verfügung?
+
+
+```r
+# (1) dplyr laden
+library(dplyr)
+
+# (2) Überblick
+glimpse(studium.df)
+```
+
+```
+## Observations: 56
+## Variables: 9
+## $ name                          &lt;chr&gt; "akademie-der-media", "bsp-busin...
+## $ anzahl_kinos                  &lt;dbl&gt; 12, 108, 2, 8, 9, 20, 33, NA, 12...
+## $ einwohnerzahl_stadt           &lt;dbl&gt; 586000, 3452911, 49098, 329327, ...
+## $ kosten_semesterticket_in      &lt;dbl&gt; 199.00, 180.00, 104.00, 113.20, ...
+## $ mietspiegel_stadt             &lt;dbl&gt; 11.20, 8.82, 10.31, 6.60, 8.83, ...
+## $ offnungszeiten_bibliothek     &lt;dbl&gt; NA, 37.0, 114.0, NA, 84.0, 231.0...
+## $ regionaler_preisindex         &lt;dbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, ...
+## $ sonnenstunden_pro_jahr        &lt;dbl&gt; 1724.0, 1623.0, NA, 1460.0, 1700...
+## $ studierende_hochschule_gesamt &lt;dbl&gt; 300, 472, 3800, 3200, 39600, 230...
+```
+
+---
+
+# Datenexploration mit dplyr
+
+Fünf Befehle, die die Datenaufbereitung und -analyse unterstützen (vgl. [Wickham &amp; Grolemund 2017](https://r4ds.had.co.nz/transform.html) &amp; [Cheatsheet](https://github.com/rstudio/cheatsheets/raw/master/data-transformation.pdf)):
+
+&lt;img src="Figures/dplyr_table.PNG" width="100%" /&gt;
+
+---
+
+# Kombination von Befehlen
+
+
+```r
+# (1) Kopie des Datensatzes
+stdm.copy &lt;- studium.df
+# (2) Select: Name, Kino, Einwohner
+stdm.copy &lt;- select(stdm.copy, name, anzahl_kinos, einwohnerzahl_stadt)
+# (3) Erstelle Kinos pro Kopf
+stdm.copy &lt;- mutate(stdm.copy, kino_pc = anzahl_kinos / einwohnerzahl_stadt)
+# (4) Wähle Fälle &gt; Median(Kino pro Kopf)
+stdm.copy &lt;- filter(stdm.copy, kino_pc &gt; median(kino_pc, na.rm = TRUE))
+# (5) Sortiere Kino pro Kopf (absteigend)
+stdm.copy &lt;- arrange(stdm.copy, desc(kino_pc))
+
+glimpse(stdm.copy)
+```
+
+```
+## Observations: 27
+## Variables: 4
+## $ name                &lt;chr&gt; "ku-eichstaett-ingolstadt", "uni-freiburg-...
+## $ anzahl_kinos        &lt;dbl&gt; 5, 13, 9, 2, 4, 4, 15, 2, 3, 2, 108, 108, ...
+## $ einwohnerzahl_stadt &lt;dbl&gt; 13100, 38732, 107500, 28962, 63315, 85500,...
+## $ kino_pc             &lt;dbl&gt; 3.816794e-04, 3.356398e-04, 8.372093e-05, ...
+```
+
+---
+
+# Nachteile
+
+- ausführlich (Tippfehler!)
+- viele Kopien eines Datensatzes
+- redundant
+
+Weitere Möglichkeit:
+
+
+```r
+arrange(filter(mutate(select(studium.df, name, anzahl_kinos, einwohnerzahl_stadt), kino_pc = anzahl_kinos / einwohnerzahl_stadt), kino_pc &gt; median(kino_pc, na.rm = TRUE)), desc(kino_pc))
+```
+
+```
+## # A tibble: 27 x 4
+##    name                     anzahl_kinos einwohnerzahl_stadt   kino_pc
+##    &lt;chr&gt;                           &lt;dbl&gt;               &lt;dbl&gt;     &lt;dbl&gt;
+##  1 ku-eichstaett-ingolstadt            5               13100 0.000382 
+##  2 uni-freiburg-schweiz               13               38732 0.000336 
+##  3 fau-erlangen-nuernberg              9              107500 0.0000837
+##  4 tu-ilmenau                          2               28962 0.0000691
+##  5 uni-weimar                          4               63315 0.0000632
+##  6 uni-tuebingen                       4               85500 0.0000468
+##  7 uni-zuerich                        15              366765 0.0000409
+##  8 dhbw-ravensburg                     2               49098 0.0000407
+##  9 uni-bamberg                         3               75743 0.0000396
+## 10 zeppelin-uni                        2               59000 0.0000339
+## # ... with 17 more rows
+```
+
+---
+
+## Die Pipe (%&gt;%)
+
+&lt;img src="Figures/pipe_hex.PNG" width="10%" /&gt;
+
+Pipe-Operator: `%&gt;%`
+
+- verknüpft Befehle
+- wird als "und dann" gelesen
+
+--
+
+1. Verwende den Datensatz `studium.df` (dann `%&gt;%`) 
+2. Wähle Variablen aus (dann `%&gt;%`)
+3. Erzeuge die Variable `kino_pc` (dann `%&gt;%`) 
+4. Verwende Fälle, die größer als der Median sind (dann `%&gt;%`)
+5. Sortiere den Datensatz (abnehmende Kinozahl pro Kopf)
+
+
+```r
+studium.df %&gt;%    
+  select(name, anzahl_kinos, einwohnerzahl_stadt) %&gt;%
+  mutate(kino_pc = anzahl_kinos / einwohnerzahl_stadt) %&gt;%
+  filter(kino_pc &gt; median(kino_pc, na.rm = TRUE)) %&gt;%
+  arrange(desc(kino_pc))
+```
+
+---
+
+# Komplexe Rekodierung
+
+[case_when](https://dplyr.tidyverse.org/reference/case_when.html):
+
+
+```r
+studium.df &lt;- studium.df %&gt;%
+  mutate(
+    stadt_typ = case_when(
+      einwohnerzahl_stadt &lt; 100000 ~ "stadt",
+      einwohnerzahl_stadt &lt; 500000 ~ "großstadt",
+      einwohnerzahl_stadt &gt; 500000 ~ "metropole",
+      TRUE ~ NA_character_))
+```
+
+---
+
+# Übungen
+
+- Wie teuer ist ein Semesterticket im Durchschnitt?
+- Welche zehn Städte bieten das günstigste Ticket?
+- Unterscheidet Ticketpreis nach Stadttyp (Stadt/Großstadt/Metropole)? (Tipp: `?group_by`)
+
+---
+
+# Visualisierung
+
+Paket: ggplot2 (Einführung: [Healy 2018](http://socviz.co/))
+
+&lt;img src="WebScraping-Muenster_files/figure-html/ggplot2_exm-1.png" width="70%" /&gt;
+
+---
+
+# 3. Web Scraping
+
+&gt; "...something big is going on" ([Salganik 2018: 2](https://www.bitbybitbook.com/en/1st-ed/preface/))
+
+- Übergang vom analogen zum digitalen Zeitalter
+    - kommende Krise der empirischen Soziologie ([Savage &amp; Burrows 2007](https://journals.sagepub.com/doi/10.1177/0038038507080443#articleShareContainer))?
+    - neue Möglichkeiten und/oder Gefahren ([Salganik 2018: 17-41](https://www.bitbybitbook.com/en/1st-ed/observing-behavior/characteristics/))
+    
+&gt; "'computational social science' (CSS) is occurring. The question is whether
+&gt; it happens with or without social scientists" ([Heiberger &amp; Riebling 2016: 1](https://journals.sagepub.com/doi/abs/10.1177/2059799115622763))
+
+---
+
+# Digitale Daten
+
+- positiv: big, always-on, nonreactive
+- negativ: incomplete, inaccessible, nonrepresentative, drifting, algorithmically 
+confounded, sensitive
+
+Quelle: [Salganik 2018: 17-41](https://www.bitbybitbook.com/en/1st-ed/observing-behavior/characteristics/)
+
+---
+
+# Technologien des WWW
+
+.pull-left[
+
+Infrastruktur des Internets im Alltag irrelevant.
+
+Unser Browser übernimmt:
+
+- Serveranfragen (Request/Response: HTTP)
+- Darstellung von HTML, CSS und JavaScript
+
+Um Informationen gezielt abzufragen, benötigen wir allerdings basale Kenntnisse 
+der zugrundeliegenden Technologien.
+
+]
+
+.pull-right[
+
+&lt;img src="Figures/Greer-Seekabel.jpg" width="80%" /&gt;
+
+]
+
+---
+
+# HTTP I
+
+**H**yper**t**ext **T**ransfer **P**rotocol [(HTTP)](https://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol)
+
+&lt;img src="Figures/http-request-response.png" width="50%" /&gt;
+
+- Übertragungsprotokoll, welches aus zwei Teilen besteht:
+
+    - Request (Client)
+    - Response (Server)
+
+---
+
+# HTTP II
+
+- Requests erfolgen über **U**niform **R**esource **L**ocators [(URL)](https://en.wikipedia.org/wiki/URL)
+    - Teile der URL können genutzt werden, um Informationen zu extrahieren
+    
+&lt;img src="Figures/http-url-structure.png" width="50%" /&gt;
+
+---
+
+# Beispiel: HTTP I
+
+- `GET`-Abfrage mit `httr::GET` und Antwort des Servers in R
+
+
+```r
+# install.packages("httr")
+p_load(httr)
+response &lt;- GET("https://www.wahlrecht.de/umfragen/index.htm") %&gt;%
+  print()
+```
+
+```
+## Response [https://www.wahlrecht.de/umfragen/index.htm]
+##   Date: 2019-05-16 09:52
+##   Status: 200
+##   Content-Type: text/html
+##   Size: 40.1 kB
+## &lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://w...
+## &lt;html lang="de-DE"&gt;
+## 
+## &lt;head&gt;
+## &lt;meta http-equiv="expires" content="0"&gt;
+## &lt;meta http-equiv="content-type" content="text/html; charset=UTF-8"&gt;
+## &lt;meta name="description" content="Sonntagsfrage &amp;ndash; Aktuelle Ergebni...
+## &lt;meta name="keywords" content="Wahlumfragen, Wahlumfrage, Wahlprognosen,...
+## &lt;meta property="og:site_name" content="Wahlrecht.de"&gt;
+## &lt;meta property="og:url" content="https://www.wahlrecht.de/umfragen/index...
+## ...
+```
+
+---
+
+# Beispiel: HTTP II
+
+
+```r
+#install.packages("rvest")
+library(rvest)
+
+survey &lt;- response %&gt;% 
+  read_html() %&gt;% 
+  html_table(".wilko", 
+             header = TRUE, 
+             fill = TRUE) %&gt;%
+  .[[2]] %&gt;%
+  glimpse()
+```
+
+```
+## Observations: 9
+## Variables: 12
+## $ Institut           &lt;chr&gt; "Veröffentl.", "CDU/CSU", "SPD", "GRÜNE", "...
+## $ ``                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA
+## $ Allensbach         &lt;chr&gt; "18.04.2019", "30 %", "18,5 %", "18 %", "9 ...
+## $ Emnid              &lt;chr&gt; "11.05.2019", "29 %", "16 %", "19 %", "9 %"...
+## $ Forsa              &lt;chr&gt; "13.05.2019", "30 %", "15 %", "20 %", "8 %"...
+## $ `Forsch’gr.Wahlen` &lt;chr&gt; "10.05.2019", "30 %", "16 %", "20 %", "7 %"...
+## $ GMS                &lt;chr&gt; "09.05.2019", "29 %", "17 %", "19 %", "8 %"...
+## $ Infratestdimap     &lt;chr&gt; "02.05.2019", "28 %", "18 %", "20 %", "8 %"...
+## $ INSA               &lt;chr&gt; "13.05.2019", "28,5 %", "16 %", "19 %", "9,...
+## $ Yougov             &lt;chr&gt; "03.05.2019", "29 %", "18 %", "17 %", "9 %"...
+## $ ``                 &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA
+## $ `Bundes-tagswahl`  &lt;chr&gt; "24.09.2017", "32,9 %", "20,5 %", "8,9 %", ...
+```
+
+---
+
+# Beispiel: HTTP III
+
+&lt;img src="WebScraping-Muenster_files/figure-html/ggplot2_aw-1.png" width="65%" /&gt;
+
+---
+
+# HTML
+
+**H**yper**t**ext **M**arkup **L**anguage [(HTML)](https://www.w3schools.com/html/default.asp)
+
+- einfacher Text mit weiteren Anweisungen (Tags, Attributes...)
+- wird vom Browser interpretiert und dargestellt
+    
+HTML-Code ist über die Webentwicklungstools des Browsers verfügbar
+- Rechtsklick -&gt; Seitenquelltext anzeigen
+
+---
+
+# Beispiel: HTML I
+
+Einfache Seiten über Editor/Notepad++ erstellbar:
+
+
+```r
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+
+&lt;head&gt;
+&lt;title&gt;Workshop Web Scraping&lt;/title&gt;
+&lt;/head&gt;
+
+&lt;body&gt;
+&lt;h1&gt; Web Scraping mit R, Universit&amp;auml;t Münster&lt;/h1&gt;
+&lt;p&gt;Dieser Kurs f&amp;uuml;hrt in das "Web Scraping" mit R ein. Er wird durch &lt;a href="https://fguelzau.rbind.io/"&gt;Fabian G&amp;uuml;lzau&lt;/a&gt; geleitet.&lt;/p&gt;
+
+&lt;/body&gt;
+&lt;/html&gt;
+```
+
+Der Browser interpretiert den Code und zeigt eine [Internetseite](http://htmlpreview.github.io/?https://github.com/FabianFox/Webscraping-Muenster-/blob/master/Code/HTML-Example.html) an.
+
+---
+
+# Beispiel: HTML II
+
+HTML:
+
+- hat eine Baumstruktur
+- Markup-Elemente helfen uns Informationen zu lokalisieren (Relationalität)
+    - **D**ocument **O**bject **M**odel [(DOM)](https://en.wikipedia.org/wiki/Document_Object_Model)
+    - Darstellung von HTML in R (parsing)
+    
+&lt;img src="Figures/Wahlrecht-Tree.PNG" width="70%" /&gt;
+
+---
+
+# CSS
+
+**C**ascading **S**tyle **S**heet [(CSS)](https://www.w3schools.com/css/default.asp)
+
+- beinhaltet Informationen über den Stil der HTML-Seite
+- kann genutzt werden, um Informationen zu lokalisieren (CSS-Selektoren)
+
+&lt;img src="Figures/CSS-Example.PNG" width="30%" /&gt;
+
+---
+
+# JavaScript
+
+[JavaScript](https://www.w3schools.com/js/default.asp): "Programmiersprache des Internets"
+
+- macht Internetseiten dynamisch
+- Inhalte erscheinen erst nach Ausführung von JS 
+    - problematisch für unsere Scraper
+
+&lt;img src="Figures/JavaScript-Example.PNG" width="50%" /&gt;
+
+---
+
+# Web Scraping in R I
+
+Web Scraping-Projekte folgen einem generellen Schema:
+
+1. Internetseite kennenlernen
+2. Import von HTML-Dateien
+3. Information isolieren
+4. Iteration (loops)
+
+&lt;img src="Figures/data-science-workflow.PNG" width="50%" /&gt;
+
+Quelle: [Wickham &amp; Grolemund (2018)](https://r4ds.had.co.nz/introduction.html)
+
+---
+
+# Web Scraping in R II
+
+.pull-left[
+
+Das generelle Schema lässt sich in R über das Paket [`rvest`](https://github.com/hadley/rvest) umsetzen:
+
+1. Kennenlernen der Internetseite [(u.a. `robotstxt`)](https://github.com/ropensci/robotstxt)
+2. `read_html`: Import von HTML/XML-Dateien
+3. Information isolieren
+    - `html_nodes`: Extrahiert Teile des HTML-Dokument mit Hilfe von XPath/CSS-Selektoren
+    - `html_text` / `html_attr` / `html_table`: Extrahiert Text, Attribute und Tabellen
+4. `map` (package: [purrr](https://purrr.tidyverse.org/)): Iteration (loops)
+
+]
+
+.pull-right[
+
+&lt;img src="Figures/rvest.PNG" width="50%" /&gt;
+
+]
+
+---
+
+# Beispiel: Sonntagsfrage
+
+- Sonntagsfrage
+    - von verschiedenen Umfrageinstituten erhoben [(Wahlrecht.de)](https://www.wahlrecht.de/umfragen/)
+    - Archivfunktion (zeitlicher Verlauf)
+    
+Ziel: Aktuelle Umfragen aller Institute herunterladen und kombinieren.
+
+&lt;img src="Figures/Sonntagsfrage.PNG" width="50%" /&gt;
+
+Quelle: [Tagesschau.de](https://www.tagesschau.de/inland/deutschlandtrend/)
+
+---
+
+# (1) Kennenlernen der Internetseite
+
+Fragen, die beantwortet werden sollten:
+
+- statische oder dynamische Internetseite
+    - statisch: [`rvest`](https://github.com/hadley/rvest)
+    - dynamisch: [`RSelenium`](https://github.com/ropensci/RSelenium)
+- Web Scraping erlaubt
+    - Terms of Service (ToS)
+    - robots.txt
+
+---
+
+# Wahlrecht: Kennenlernen der Internetseite
+
+Hierzu gehört:
+
+- Seitenquelltext: **statisch**
+- HTML-Tags der Zielinformation: **table / class: wilko**
+- robots.txt / Terms of Service: **keine relevanten Beschränkungen**
+
+
+```r
+paths_allowed(
+  paths  = c("/index.htm","/allensbach.htm"), 
+  domain = c("wahlrecht.de")
+)
+```
+
+```
+## 
+ wahlrecht.de                      No encoding supplied: defaulting to UTF-8.
+```
+
+```
+## [1] TRUE TRUE
+```
+
+---
+
+# (2) Import von HTML-Dateien
+
+Internetseiten müssen in ein Format übersetzt werden, welches von R gelesen und
+bearbeitet werden kann (z.B. Baumstruktur).
+
+Benötigt wird:
+
+- URL 
+- -&gt; Request/Response-Paar
+
+---
+
+# Wahlrecht: Import von HTML-Seiten
+
+Über `rvest::read_html`:
+
+
+```r
+(html.page &lt;- read_html("https://www.wahlrecht.de/umfragen/allensbach.htm"))
+```
+
+```
+## {xml_document}
+## &lt;html lang="de-DE"&gt;
+## [1] &lt;head&gt;\n&lt;meta http-equiv="expires" content="0"&gt;\n&lt;meta http-equiv="c ...
+## [2] &lt;body&gt;\n\n&lt;div class="head"&gt;\n&lt;table class="title" width="100%"&gt;&lt;tr&gt; ...
+```
+
+---
+
+# (3) Information isolieren
+
+Zur Extraktion von Informationen nutzen wir die Baumstruktur von HTML:
+
+- [XPath](https://www.w3schools.com/xml/xpath_intro.asp)
+- [CSS-Selektoren](https://www.w3schools.com/csSref/css_selectors.asp)
+
+&lt;img src="Figures/TreeStructureII.PNG" width="80%" height="85%" /&gt;
+
+Quelle: [selfhtml.de](https://wiki.selfhtml.org/wiki/XML/Regeln/Baumstruktur)
+
+---
+
+# XPath und CSS-Selektoren: Tools
+
+Wir konstruieren Selektoren selten manuell, da Anwendungen dies übernehmen.
+
+Tools:
+
+- [Selector Gadget](https://selectorgadget.com/)
+- Browser: [Webentwicklungstools](https://developer.mozilla.org/de/docs/Tools/Seiten_Inspektor)
+- Lerntools: [CSS Diner](https://flukeout.github.io/)
+
+---
+
+# Wahlrecht: CSS-Selektor
+
+HTML-Tabellen lassen sich oft besonders leicht identifizieren, da sie das Tag 
+"table" tragen: 
+
+
+```r
+(html.node &lt;- html_nodes(html.page, css = ".wilko")) 
+```
+
+```
+## {xml_nodeset (1)}
+## [1] &lt;table class="wilko" align="center" cellpadding="2" cellspacing="3"  ...
+```
+
+---
+
+# Wahlrecht: Umwandeln in Text/Tabelle
+
+Wir sind selten am HTML-Tag interessiert, sondern an dem Inhalt:
+
+
+```r
+html.table &lt;- html.node %&gt;%
+  html_table(header = TRUE, fill = TRUE) %&gt;%
+  .[[1]] %&gt;%                                 # body
+  .[4:nrow(.), c(1, 3:9)] %&gt;%                # subsetting
+  glimpse()
+```
+
+```
+## Observations: 71
+## Variables: 8
+## $ ``        &lt;chr&gt; "18.04.2019", "27.03.2019", "19.02.2019", "23.01.201...
+## $ `CDU/CSU` &lt;chr&gt; "30,0 %", "30,0 %", "30,0 %", "31,5 %", "29,0 %", "2...
+## $ SPD       &lt;chr&gt; "18,5 %", "18,0 %", "18,0 %", "16,5 %", "16,5 %", "1...
+## $ GRÜNE     &lt;chr&gt; "18,0 %", "19,0 %", "18,5 %", "18,0 %", "19,0 %", "1...
+## $ FDP       &lt;chr&gt; "9,0 %", "8,5 %", "8,0 %", "8,5 %", "8,5 %", "9,5 %"...
+## $ LINKE     &lt;chr&gt; "8,0 %", "8,5 %", "8,0 %", "8,5 %", "9,0 %", "9,0 %"...
+## $ AfD       &lt;chr&gt; "12,5 %", "12,0 %", "13,5 %", "13,0 %", "14,0 %", "1...
+## $ Sonstige  &lt;chr&gt; "4,0 %", "4,0 %", "4,0 %", "4,0 %", "4,0 %", "4,0 %"...
+```
+
+---
+
+# Exkurs: Regex
+
+.left-column[
+
+&lt;img src="Figures/RegexOrly.jpg" width="90%" height="95%" /&gt;
+
+]
+
+.right-column[
+
+**Reg**ular **Ex**pression
+
+- zur Suche von Ausdrücken (patterns) in Text (strings)
+- in R z.B. über [`stringr`](https://stringr.tidyverse.org/index.html)
+
+
+```r
+str_view(string = "Wir benötigen nicht den gesamten Text, sondern die 42.",
+         pattern = "[:digit:]+")
+```
+
+<div id="htmlwidget-d4783051853041b61552" style="width:960px;height:100%;" class="str_view html-widget"></div>
+<script type="application/json" data-for="htmlwidget-d4783051853041b61552">{"x":{"html":"<ul>\n  <li>Wir benötigen nicht den gesamten Text, sondern die <span class='match'>42<\/span>.<\/li>\n<\/ul>"},"evals":[],"jsHooks":[]}</script>
+
+]
+
+---
+
+# Wahlrecht: Regex
+
+Die Umfrageergebnisse liegen als "strings" vor, sodass wir sie für die Datenanalyse 
+in numerische Werte umwandeln müssen.
+
+
+```r
+str_view(string = html.table$`CDU/CSU`[1:5],
+         pattern = "[:digit:]+,?[:digit:]?")
+```
+
+<div id="htmlwidget-eec220a821ececaa6fd1" style="width:960px;height:100%;" class="str_view html-widget"></div>
+<script type="application/json" data-for="htmlwidget-eec220a821ececaa6fd1">{"x":{"html":"<ul>\n  <li><span class='match'>30,0<\/span> %<\/li>\n  <li><span class='match'>30,0<\/span> %<\/li>\n  <li><span class='match'>30,0<\/span> %<\/li>\n  <li><span class='match'>31,5<\/span> %<\/li>\n  <li><span class='match'>29,0<\/span> %<\/li>\n<\/ul>"},"evals":[],"jsHooks":[]}</script>
+
+---
+
+# Datenaufbereitung
+
+Wir ersetzen zudem die Kommata durch Punkte und wandeln die Daten in ein 
+"long"-Format um:
+
+
+```r
+allensbach.df &lt;- html.table %&gt;%
+  rename("Zeitpunkt" = 1) %&gt;%                                 # 1. Variable benennen                    
+  mutate(Zeitpunkt = parse_datetime(Zeitpunkt,                # 2. als Datum
+                                    format = "%d.%m.%Y")) %&gt;%
+  mutate_if(is.character, str_extract,                        # 3a. Zahl entnehmen
+            pattern = "[:digit:]+,?[:digit:]?") %&gt;%
+  mutate_if(is.character, str_replace,                        # 3b. Komma als Punkt
+            pattern = ",", replacement = ".") %&gt;%
+  mutate_if(is.character, as.numeric) %&gt;%                     # 3c. als Zahl
+  gather(party, vote, -Zeitpunkt) %&gt;%                         # 4. long format
+  glimpse()                                                   # 5. ausgeben
+```
+
+```
+## Observations: 497
+## Variables: 3
+## $ Zeitpunkt &lt;dttm&gt; 2019-04-18, 2019-03-27, 2019-02-19, 2019-01-23, 201...
+## $ party     &lt;chr&gt; "CDU/CSU", "CDU/CSU", "CDU/CSU", "CDU/CSU", "CDU/CSU...
+## $ vote      &lt;dbl&gt; 30.0, 30.0, 30.0, 31.5, 29.0, 28.0, 29.0, 31.5, 31.0...
+```
+
+---
+
+# Visualisierung
+
+Zuletzt können wir die Ergebnisse der Sonntagsfrage visualisieren (Paket: [`ggplot2`](https://ggplot2.tidyverse.org/)):
+
+&lt;img src="WebScraping-Muenster_files/figure-html/allensbach.fig-1.png" width="60%" /&gt;
+
+---
+
+# (4) Iteration
+
+Wird in den weiteren Anwendungen besprochen ([Code](https://github.com/FabianFox/Webscraping-Muenster-/blob/master/Code/Wahlrecht-Scraper.R))
+
+&lt;img src="WebScraping-Muenster_files/figure-html/all_surveys-1.png" width="60%" /&gt;
+
+---
+
+# Medienhype: Martin Schulz
+
+.left-column[
+
+&lt;img src="Figures/MEGA-Schulz.jpg" width="100%" /&gt;
+
+]
+
+.right-column[
+
+Bundestagswahlkampf 2017
+
+- Hoffnung auf SPD-Kanzlerschaft (Umfragehoch: ~30%)
+- gestützt durch (sozialen) Medienhype ("Schulz-Zug")
+- abrupter Einbruch nach Landtagswahlen (u.a. NRW)
+
+Frage: Hat die mediale Debatte das Umfragehoch beeinflusst?
+
+]
+
+---
+
+# Bundestagswahlkampf 2017
+
+
+```r
+election.df &lt;- readRDS(gzcon(url("https://github.com/FabianFox/Webscraping-Muenster-/blob/master/Data/election2017.RDS?raw=true")))
+```
+
+&lt;img src="WebScraping-Muenster_files/figure-html/forsa.fig-1.png" width="60%" /&gt;
+
+---
+
+# Vorgehen
+
+1. Anzahl der SpiegelOnline-Artikel, die "Martin Schulz" erwähnen
+    - Scraping des [SPON-Archivs](https://www.spiegel.de/suche/?suchbegriff=)
+2. (explorative) Prüfung des Zusammenhang: Medienaufmerksamkeit und Umfrageergebnis
+
+&lt;img src="Figures/schulzzug.PNG" width="80%" /&gt;
+
+---
+
+# Scraping SPON
+
+- Informationen auf einer einzelnen Seite abfragen
+- Ausgangsseite mit Sucheinstellungen ([Link](https://www.spiegel.de/suche/?suchbegriff=Martin+Schulz&amp;suchzeitraum=ab2005&amp;suchbereich=header%2Ctitle%2Clead&amp;fromDate=01.01.2005&amp;quellenGroup=SPOX&amp;quellenGroup=SP))
+
+
+```r
+# Date: .search-teaser div
+# Title: .search-teaser .headline
+# Teaser: .article-intro
+
+url &lt;- "https://www.spiegel.de/suche/?suchbegriff=Martin+Schulz&amp;suchzeitraum=ab2005&amp;fromDate=01.01.2005&amp;quellenGroup=SPOX&amp;quellenGroup=SP"
+
+spon.df &lt;- read_html(url) %&gt;%            # Import
+  html_nodes(".search-teaser div") %&gt;%   # CSS-Selektoren
+  html_text() 
+```
+
+---
+
+# Scraping SPON: Iteration
+
+Sobald unser Scraper für eine Seite funktionieren, können wir sie generalisieren:
+
+- Funktionen ([Wickham 2019](https://adv-r.hadley.nz/functions.html))
+- Schleifen mit purrr ([Cheatsheet](https://www.rstudio.com/resources/cheatsheets/#purrr), [Wickham &amp; Grolemund 2017](https://r4ds.had.co.nz/iteration.html)) 
+
+--
+
+&lt;img src="Figures/purrr_fig.PNG" width="80%" /&gt;
+
+--
+
+---
+
+# Scraping SPON: Iteration
+
+URL:
+
+- statischer Teil ("https://www.spiegel.de/suche/ (... ) &amp;quellenGroup=SP")
+- dynamischer Teil ("&amp;pageNumber=**3**")
+
+--
+
+Kombination von statischem und dynamischen Teil:
+
+
+```r
+links.df &lt;- tibble(
+  links = paste0("https://www.spiegel.de/suche/?suchbegriff=Martin+Schulz&amp;suchzeitraum=ab2005&amp;fromDate=01.01.2005&amp;quellenGroup=SPOX&amp;quellenGroup=SP&amp;pageNumber=", seq(1:180))
+) %&gt;%
+  glimpse()
+```
+
+```
+## Observations: 180
+## Variables: 1
+## $ links &lt;chr&gt; "https://www.spiegel.de/suche/?suchbegriff=Martin+Schulz...
+```
+
+--
+
+---
+
+# Exkurs: Funktionen
+
+&lt;img src="Figures/function_fig.PNG" width="60%" /&gt;
+
+--
+
+
+```r
+# Some data
+test &lt;- tibble(
+  var1 = c(1, 3, 5, 9),
+  var2 = c(5, 5, 5, 5)
+)
+
+# Function
+perc_fun &lt;- function(x){  # formals
+  x / sum(x) * 100        # body
+}
+
+# Apply
+map(test, perc_fun) # Loop
+```
+
+```
+## $var1
+## [1]  5.555556 16.666667 27.777778 50.000000
+## 
+## $var2
+## [1] 25 25 25 25
+```
+
+--
+
+---
+
+# Scraping SPON: Funktion
+
+Unsere Funktion, die Publikationsdatum, Titel und Teasertext extrahiert:
+
+
+```r
+spon_scraper &lt;- function(x) {
+  page &lt;- read_html(x)
+  
+  date &lt;- page %&gt;%
+    html_nodes(".search-teaser div") %&gt;%
+    html_text()
+  
+  title &lt;- page %&gt;%
+    html_nodes(".search-teaser .headline") %&gt;%
+    html_text()
+  
+  df &lt;- tibble(date, title)
+
+  teaser &lt;- page %&gt;%
+    html_nodes(".article-intro") %&gt;%
+    html_text()
+  
+  df &lt;- tibble(date, title, teaser)
+}
+```
+
+---
+
+# Scraping SPON: Funktion &amp; Iteration
+
+
+```r
+spon.df &lt;- map_dfr(
+  links.df$links, ~{
+    Sys.sleep(sample(seq(0, 3, 0.5), 1)) # friendly scraping
+    spon_scraper(.x)
+  })
+```
+
+---
+
+# Ergebnis
+
+[Daten](https://github.com/FabianFox/Webscraping-Muenster-/blob/master/Data/SPON-Data.RDS)
+
+
+```r
+spon.df &lt;- readRDS(gzcon(url("https://github.com/FabianFox/Webscraping-Muenster-/blob/master/Data/SPON-Data.RDS?raw=true")))
+```
+
+&lt;img src="WebScraping-Muenster_files/figure-html/load_spon-1.png" width="60%" /&gt;
+
+---
+
+# 3b. Spezielle Technologien
+
+Spezielle Möglichkeiten &amp; Herausforderungen:
+
+[**A**pplication **P**rogramming **I**nterface (API)](https://en.wikipedia.org/wiki/Application_programming_interface)
+
+- **erleichtert** den Zugriff auf Daten über spezifische Schnittstellen
+    - Beispiele: [Twitter](https://developer.twitter.com/en.html), [Die Zeit](http://developer.zeit.de/index/), [Eurostat](https://ec.europa.eu/eurostat/web/json-and-unicode-web-services), [Wikipedia](https://github.com/Ironholds/WikipediR/)
+    
+Dynamische Webseiten &amp; bot blocking:
+
+- **erschwert** Zugriff, da Daten erst nach Nutzeranfragen erzeugt werden
+    - Beispiele: Süddeutsche Zeitung (Archiv), ArtFacts
+
+---
+
+# APIs: Steigende Relevanz
+
+&lt;img src="WebScraping-Muenster_files/figure-html/unnamed-chunk-9-1.png" width="70%" /&gt;
+
+Quelle: Eigene Darstellung [(Code)](https://github.com/FabianFox/Webscraping-Hamburg-/blob/master/Code/programmableweb-Scraper.R)
+
+---
+
+# 4. Rechtliche Aspekte
+
+&gt; "Big data? Cheap. Lawyers? Not so much." (Pete Warden zit. in [Mitchell 2015: 217](http://shop.oreilly.com/product/0636920034391.do))
+
+- rechtliche Grauzone
+- länderspezifisch (USA: strikt; Deutschland: liberal)
+- Terms of Service (ToS) beachten
+- robots.txt prüfen
+
+---
+
+# 4. Rechtliche Aspekte in der Praxis
+
+Ziel: "friendly scraping" 
+
+- Server nicht überlasten ([crawl delay](https://rud.is/b/2017/07/28/analyzing-wait-delay-settings-in-common-crawl-robots-txt-data-with-r/))
+    - `Sys.sleep` einbauen (~5-10 Sekunden)
+    - zufällige Wartezeit, um menschliches Verhalten zu imitieren
+- Bot oder Mensch
+    - "headless browsing"
+        - [RSelenium](https://github.com/ropensci/RSelenium), [decapitated](https://github.com/hrbrmstr/decapitated), [splashr](https://github.com/hrbrmstr/splashr) oder [htmlunit](https://github.com/hrbrmstr/htmlunit)
+- API nutzen (Sammlung unter [programmableweb.com](https://www.programmableweb.com/))
+- Seitenbetreiber kontaktieren
+
+---
+
+# 5. Weitere Beispiele und Anwendungen
+
+---
+
+# 6. Weiterlernen
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();</script>
+
+<script>
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
