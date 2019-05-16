@@ -10,7 +10,7 @@ p_load(tidyverse, lubridate, rvest)
 ## ---------------------------------------------------------------------- ##
 
 # all pages with information on URLs
-all.urls <- map_chr(0:726, ~paste0("https://www.programmableweb.com/category/all/apis?page=", .x))
+all.urls <- map_chr(0:762, ~paste0("https://www.programmableweb.com/category/all/apis?page=", .x))
 
 # Function that grabs the respective pages
 api_fun <- function(x) {
@@ -52,14 +52,13 @@ ggplot(api.plot.df, aes(x = Submitted, y = cumulative.n)) +
        subtitle = "Eine steigende Anzahl an Unternehmen bietet APIs an.",
        caption = "Quelle: programmableweb.org",
        x = "", 
-       y = "")
+       y = "") +
   theme(panel.grid.minor.x = element_blank(),
         panel.grid.major.x = element_blank(),
         text = element_text(size = 14),
         axis.ticks = element_line(size = .5))
 
-  
 # Save data
 ## ---------------------------------------------------------------------- ##
-saveRDS(api.list, file = "./Slides/Figures/programmableweb_data.R")  
-saveRDS(api.plot.df, file = "./Slides/Figures/api_plot_df.R") 
+saveRDS(api.df, file = "./Presentation/Data/programmableweb_data.RDS")  
+saveRDS(api.plot.df, file = "./Presentation/Figures/api_plot_df.RDS") 
