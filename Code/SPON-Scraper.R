@@ -18,7 +18,7 @@ p_load(tidyverse, rvest, lubridate)
 ## ---------------------------------------------------------------------- ##
 
 # first page of search results
-url <- "https://www.spiegel.de/suche/?suchbegriff=Martin+Schulz&suchzeitraum=ab2005&suchbereich=header%2Ctitle%2Clead&fromDate=01.01.2005&quellenGroup=SPOX&quellenGroup=SP"
+url <- "https://www.spiegel.de/suche/?suchbegriff=Martin+Schulz&suchzeitraum=ab2005&fromDate=01.01.2005&quellenGroup=SPOX&quellenGroup=SP"
 
 # CSS-Selectors (Nodes)
 # Date: .search-teaser div
@@ -41,7 +41,7 @@ spon.df <- read_html(url) %>%                  # import html page
 
 # Create a data frame with all pages
 links.df <- tibble(
-  links = paste0("https://www.spiegel.de/suche/?suchbegriff=Martin+Schulz&suchbereich=header,title,lead&suchzeitraum=ab2005&fromDate=01.01.2005&quellenGroup=SPOX&quellenGroup=SP&pageNumber=", seq(1:30))
+  links = paste0("https://www.spiegel.de/suche/?suchbegriff=Martin+Schulz&suchzeitraum=ab2005&fromDate=01.01.2005&quellenGroup=SPOX&quellenGroup=SP&pageNumber=", seq(1:180))
 )
 
 # Create a function that extracts the relevant information
@@ -77,5 +77,6 @@ spon.df <- map_dfr(
 spon.df <- spon.df %>%
   separate(date, into = c("source", "section", "date"), sep = "-") %>%
   mutate_at(c("source", "section", "date"), str_trim, "both") %>%
-  .[-c(115, 173, 174, 187, 271, 308, 309, 363, 394, 473, 501, 536, 555, 570, 586),] %>%  # Irregular article headers 
-  mutate(date = ymd(parse_date_time(date, "d!.m!*.Y!")))
+  mutate(date = ymd(parse_date_time(date, "d!.m!*.Y!"))) %>%
+  filter(!is.na(date),
+         date < ymd("2019-12-31"))
