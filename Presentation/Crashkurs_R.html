@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+  <head>
+    <title>Web Scraping mit R - Crashkurs</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Fabian Gülzau" />
+    <link href="libs/remark-css/default.css" rel="stylesheet" />
+    <link href="libs/remark-css/default-fonts.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Web Scraping mit R - Crashkurs
+### Fabian Gülzau
+### Humboldt-Universität zu Berlin
+### 2019/05/17
+
+---
+
+
+
+
+# Vorteile von R
+
+- Open Source 
+- Riesige Community (z.B. [StackOverflow](https://stackoverflow.com/questions/tagged/r))
+- Stetige Weiterentwicklung ([CRAN](https://cran.r-project.org/))
+- [Visualisierung](https://socviz.co/index.html) &amp; [digitale Methoden](https://www.bitbybitbook.com/en/1st-ed/preface/)
+
+---
+
+# Steile Lernkurve?
+
+.pull-left[
+
+Früher:
+
+R = schwer erlernbar
+
+Inzwischen:
+
+- Onlinekurse
+- Bücher
+- Videos
+- ... 
+
+]
+
+.pull-right[
+
+&lt;img src="Figures/OReally-Trying.jpg" width="80%" /&gt;
+
+]
+
+---
+
+# Installation
+
+- Programmiersprache: [R](https://cran.r-project.org/index.html) 
+- Entwicklungsumgebung [RStudio](https://www.rstudio.com/products/rstudio/)
+- [Pakete](https://r4ds.had.co.nz/introduction.html#the-tidyverse)
+
+-&gt; kurze [Installationsanleitung](https://r4ds.had.co.nz/introduction.html#prerequisites)
+
+R kann zunächst auch über die [RStudioCloud](https://rstudio.cloud/) ausprobiert
+werden. Es ist aber eine vorherigen Anmeldung notwendig. Der Service ist kostenfrei. 
+
+
+```r
+install.packages(pacman) # Installation nur einmal notwendig
+library(pacman)
+p_load(tidyverse)
+```
+
+---
+
+# Crashkurs R
+
+- Fokus auf Datentypen &amp; -aufbereitung mit [dplyr](https://dplyr.tidyverse.org/)
+- Daten zur [Studienwahl](https://www.studium.org/kommunikationswissenschaft/uebersicht-universitaeten) im Feld "Medien- und Kommunikationswissenschaften"
+
+Nachlesen:
+
+- Wickham &amp; Grolemund (2017) ["R for Data Science"](https://r4ds.had.co.nz/)
+- Tutorial von [RStudio](https://rstudio.cloud/learn/primers)
+
+---
+
+# Datentypen
+
+&lt;img src="Figures/data_types.PNG" width="80%" /&gt;
+
+---
+
+# Daten: Studium.org
+
+&lt;img src="Figures/StudiumOrg-Muenster.PNG" width="80%" /&gt;
+
+Studienwahl: Medien- und Kommunikationswissenschaften
+
+- Wo soll ich studieren?
+- Was gibt mein Geldbeutel her?
+- Was bietet der Studienort an kulturellen Angeboten?
+
+---
+
+# Daten: Studium.org II
+
+- 56 Datenpunkte (eben soviele Einzelseiten, z.B. [Münster](https://www.studium.org/kommunikationswissenschaft/uni-muenster))
+- Copy&amp;Paste mühsam und fehleranfällig
+- Anwendungsbeispiel: Web Scraping (s. [Skript](https://github.com/FabianFox/Webscraping-Muenster-/blob/master/Code/StudiumOrg-KoWi-Scraper.R))
+
+Datensatz laden:
+
+
+```r
+# empfohlen
+studium.df &lt;- readRDS(gzcon(url("https://github.com/FabianFox/Webscraping-Muenster-/blob/master/Data/KoWi-Institute.RDS?raw=true")))
+
+# Skript ausführen (Dauer: ~5min)
+# devtools::source_url("https://raw.githubusercontent.com/FabianFox/Webscraping-Hamburg-/master/Code/SoziologieOrg-Scraper.R")
+```
+
+
+
+---
+
+# Daten: Studium.org III
+
+Welche Variablen stehen zur Verfügung?
+
+
+```r
+# (1) dplyr laden
+library(dplyr)
+
+# (2) Überblick
+glimpse(studium.df)
+```
+
+```
+## Observations: 56
+## Variables: 9
+## $ name                          &lt;chr&gt; "akademie-der-media", "bsp-busin...
+## $ anzahl_kinos                  &lt;dbl&gt; 12, 108, 2, 8, 9, 20, 33, NA, 12...
+## $ einwohnerzahl_stadt           &lt;dbl&gt; 586000, 3452911, 49098, 329327, ...
+## $ kosten_semesterticket_in      &lt;dbl&gt; 199.00, 180.00, 104.00, 113.20, ...
+## $ mietspiegel_stadt             &lt;dbl&gt; 11.20, 8.82, 10.31, 6.60, 8.83, ...
+## $ offnungszeiten_bibliothek     &lt;dbl&gt; NA, 37.0, 114.0, NA, 84.0, 231.0...
+## $ regionaler_preisindex         &lt;dbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, ...
+## $ sonnenstunden_pro_jahr        &lt;dbl&gt; 1724.0, 1623.0, NA, 1460.0, 1700...
+## $ studierende_hochschule_gesamt &lt;dbl&gt; 300, 472, 3800, 3200, 39600, 230...
+```
+
+---
+
+# Datenexploration mit dplyr
+
+Fünf Befehle, die die Datenaufbereitung und -analyse unterstützen (vgl. [Wickham &amp; Grolemund 2017](https://r4ds.had.co.nz/transform.html) &amp; [Cheatsheet](https://github.com/rstudio/cheatsheets/raw/master/data-transformation.pdf)):
+
+&lt;img src="Figures/dplyr_table.PNG" width="100%" /&gt;
+
+---
+
+# Kombination von Befehlen
+
+
+```r
+# (1) Kopie des Datensatzes
+stdm.copy &lt;- studium.df
+# (2) Select: Name, Kino, Einwohner
+stdm.copy &lt;- select(stdm.copy, name, anzahl_kinos, einwohnerzahl_stadt)
+# (3) Erstelle Kinos pro Kopf
+stdm.copy &lt;- mutate(stdm.copy, kino_pc = anzahl_kinos / einwohnerzahl_stadt)
+# (4) Wähle Fälle &gt; Median(Kino pro Kopf)
+stdm.copy &lt;- filter(stdm.copy, kino_pc &gt; median(kino_pc, na.rm = TRUE))
+# (5) Sortiere Kino pro Kopf (absteigend)
+stdm.copy &lt;- arrange(stdm.copy, desc(kino_pc))
+
+glimpse(stdm.copy)
+```
+
+```
+## Observations: 27
+## Variables: 4
+## $ name                &lt;chr&gt; "ku-eichstaett-ingolstadt", "uni-freiburg-...
+## $ anzahl_kinos        &lt;dbl&gt; 5, 13, 9, 2, 4, 4, 15, 2, 3, 2, 108, 108, ...
+## $ einwohnerzahl_stadt &lt;dbl&gt; 13100, 38732, 107500, 28962, 63315, 85500,...
+## $ kino_pc             &lt;dbl&gt; 3.816794e-04, 3.356398e-04, 8.372093e-05, ...
+```
+
+---
+
+# Nachteile
+
+- ausführlich (Tippfehler!)
+- viele Kopien eines Datensatzes
+- redundant
+
+Weitere Möglichkeit:
+
+
+```r
+arrange(filter(mutate(select(studium.df, name, anzahl_kinos, einwohnerzahl_stadt), kino_pc = anzahl_kinos / einwohnerzahl_stadt), kino_pc &gt; median(kino_pc, na.rm = TRUE)), desc(kino_pc))
+```
+
+```
+## # A tibble: 27 x 4
+##    name                     anzahl_kinos einwohnerzahl_stadt   kino_pc
+##    &lt;chr&gt;                           &lt;dbl&gt;               &lt;dbl&gt;     &lt;dbl&gt;
+##  1 ku-eichstaett-ingolstadt            5               13100 0.000382 
+##  2 uni-freiburg-schweiz               13               38732 0.000336 
+##  3 fau-erlangen-nuernberg              9              107500 0.0000837
+##  4 tu-ilmenau                          2               28962 0.0000691
+##  5 uni-weimar                          4               63315 0.0000632
+##  6 uni-tuebingen                       4               85500 0.0000468
+##  7 uni-zuerich                        15              366765 0.0000409
+##  8 dhbw-ravensburg                     2               49098 0.0000407
+##  9 uni-bamberg                         3               75743 0.0000396
+## 10 zeppelin-uni                        2               59000 0.0000339
+## # ... with 17 more rows
+```
+
+---
+
+## Die Pipe (%&gt;%)
+
+&lt;img src="Figures/pipe_hex.PNG" width="10%" /&gt;
+
+Pipe-Operator: `%&gt;%`
+
+- verknüpft Befehle
+- wird als "und dann" gelesen
+
+--
+
+1. Verwende den Datensatz `studium.df` (dann `%&gt;%`) 
+2. Wähle Variablen aus (dann `%&gt;%`)
+3. Erzeuge die Variable `kino_pc` (dann `%&gt;%`) 
+4. Verwende Fälle, die größer als der Median sind (dann `%&gt;%`)
+5. Sortiere den Datensatz (abnehmende Kinozahl pro Kopf)
+
+
+```r
+studium.df %&gt;%    
+  select(name, anzahl_kinos, einwohnerzahl_stadt) %&gt;%
+  mutate(kino_pc = anzahl_kinos / einwohnerzahl_stadt) %&gt;%
+  filter(kino_pc &gt; median(kino_pc, na.rm = TRUE)) %&gt;%
+  arrange(desc(kino_pc))
+```
+
+---
+
+# Komplexe Rekodierung
+
+[case_when](https://dplyr.tidyverse.org/reference/case_when.html):
+
+
+```r
+studium.df &lt;- studium.df %&gt;%
+  mutate(
+    stadt_typ = case_when(
+      einwohnerzahl_stadt &lt; 100000 ~ "stadt",
+      einwohnerzahl_stadt &lt; 500000 ~ "großstadt",
+      einwohnerzahl_stadt &gt; 500000 ~ "metropole",
+      TRUE ~ NA_character_))
+```
+
+---
+
+# Übungen
+
+- Wie teuer ist ein Semesterticket im Durchschnitt?
+- Welche zehn Städte bieten das günstigste Ticket?
+- Unterscheidet Ticketpreis nach Stadttyp (Stadt/Großstadt/Metropole)? (Tipp: `?group_by`)
+
+---
+
+# Visualisierung
+
+Paket: ggplot2 (Einführung: [Healy 2018](http://socviz.co/))
+
+&lt;img src="Crashkurs_R_files/figure-html/ggplot2_exm-1.png" width="70%" /&gt;
+
+---
+
+# Lernressourcen
+
+Bücher:
+
+- Wickham &amp; Grolemund (2017) R for Data Science [(online)](https://r4ds.had.co.nz/)
+- Healy (2018) Data Visualization [(online)](https://socviz.co/index.html)
+- Phillips (2018) YaRrr! The Pirate’s Guide to R [(online)](https://bookdown.org/ndphillips/YaRrr/)
+
+Interaktiv:
+
+- RStudioPrimers [(online)](https://rstudio.cloud/learn/primers)
+- swirl: Learn R, in R [(Installation)](https://swirlstats.com/students.html)
+
+Kurzanleitungen:
+
+- Cheatsheets [(online)](https://www.rstudio.com/resources/cheatsheets/)
+
+Weiterführend:
+- Sammlung von Lernressourcen auf RStudio [(online)](https://www.rstudio.com/resources/)
+- Lerncommunity: [TidyTuesdays](https://github.com/rfordatascience/tidytuesday)
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();</script>
+
+<script>
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
