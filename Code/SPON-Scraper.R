@@ -55,8 +55,6 @@ spon_scraper <- function(x) {
   title <- page %>%
     html_nodes(".search-teaser .headline") %>%
     html_text()
-  
-  df <- tibble(date, title)
 
   teaser <- page %>%
     html_nodes(".article-intro") %>%
