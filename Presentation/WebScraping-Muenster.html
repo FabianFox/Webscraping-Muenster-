@@ -27,21 +27,20 @@ class: center, middle, inverse, title-slide
 
 
 1. Einleitung
-2. Crashkurs R
-3. Web Scraping
+2. Web Scraping
     + Technologien des WWW
     + Web Scraping in R
         + a) Generelles Schema
         + b) Spezielle Technologien
-4. Rechtliche &amp; ethische Aspekte
-5. Weitere Beispiele und Anwendungen
-6. Weiterlernen
+3. Rechtliche &amp; ethische Aspekte
+4. Weitere Beispiele und Anwendungen
+5. Weiterlernen
 
 ---
 
 # Zur Präsentation
 
-- Folien sind online verfügbar: https://goo.gl/erTCX7
+- Folien sind online verfügbar: https://bit.ly/2Hw1pKl
     - Folien herunterladen und im Browser öffnen
 - Beispiele auf [GitHub](https://github.com/FabianFox/Webscraping-Muenster-)
 - Benötigte Pakete über: 
@@ -58,219 +57,17 @@ p_load(tidyverse, rvest, httr, robotstxt, qdap, janitor,
 
 # 1. Einleitung
 
-Ziele des Workshops
+Ziele des Workshops:
+
+- Web Scraping als Methode
+    - Grundlagen: WWW
+    - Umsetzung in R
+    - Beispiele
+- Quellen zum Selbststudium kennenlernen
 
 ---
 
-# 2. Crashkurs R
-
-- Fokus auf Datentypen &amp; -aufbereitung mit [dplyr](https://dplyr.tidyverse.org/)
-- Daten zur [Studienwahl](https://www.studium.org/kommunikationswissenschaft/uebersicht-universitaeten) im Feld "Medien- und Kommunikationswissenschaften"
-
-Nachlesen:
-
-- Wickham &amp; Grolemund (2017) ["R for Data Science"](https://r4ds.had.co.nz/)
-- Tutorial von [RStudio](https://rstudio.cloud/learn/primers)
-
----
-
-# Datentypen
-
-
-
----
-
-# Daten: Studium.org
-
-&lt;img src="Figures/StudiumOrg-Muenster.PNG" width="80%" /&gt;
-
-Studienwahl: Medien- und Kommunikationswissenschaften
-
-- Wo soll ich studieren?
-- Was gibt mein Geldbeutel her?
-- Was bietet der Studienort an kulturellen Angeboten?
-
----
-
-# Daten: Studium.org II
-
-- 56 Datenpunkte (eben soviele Einzelseiten, z.B. [Münster](https://www.studium.org/kommunikationswissenschaft/uni-muenster))
-- Copy&amp;Paste mühsam und fehleranfällig
-- Anwendungsbeispiel: Web Scraping (s. [Skript](https://github.com/FabianFox/Webscraping-Muenster-/blob/master/Code/StudiumOrg-KoWi-Scraper.R))
-
-Datensatz laden:
-
-
-```r
-# empfohlen
-studium.df &lt;- readRDS(gzcon(url("https://github.com/FabianFox/Webscraping-Muenster-/blob/master/Data/KoWi-Institute.RDS?raw=true")))
-
-# Skript ausführen (Dauer: ~5min)
-# devtools::source_url("https://raw.githubusercontent.com/FabianFox/Webscraping-Hamburg-/master/Code/SoziologieOrg-Scraper.R")
-```
-
----
-
-# Daten: Studium.org III
-
-Welche Variablen stehen zur Verfügung?
-
-
-```r
-# (1) dplyr laden
-library(dplyr)
-
-# (2) Überblick
-glimpse(studium.df)
-```
-
-```
-## Observations: 56
-## Variables: 9
-## $ name                          &lt;chr&gt; "akademie-der-media", "bsp-busin...
-## $ anzahl_kinos                  &lt;dbl&gt; 12, 108, 2, 8, 9, 20, 33, NA, 12...
-## $ einwohnerzahl_stadt           &lt;dbl&gt; 586000, 3452911, 49098, 329327, ...
-## $ kosten_semesterticket_in      &lt;dbl&gt; 199.00, 180.00, 104.00, 113.20, ...
-## $ mietspiegel_stadt             &lt;dbl&gt; 11.20, 8.82, 10.31, 6.60, 8.83, ...
-## $ offnungszeiten_bibliothek     &lt;dbl&gt; NA, 37.0, 114.0, NA, 84.0, 231.0...
-## $ regionaler_preisindex         &lt;dbl&gt; NA, NA, NA, NA, NA, NA, NA, NA, ...
-## $ sonnenstunden_pro_jahr        &lt;dbl&gt; 1724.0, 1623.0, NA, 1460.0, 1700...
-## $ studierende_hochschule_gesamt &lt;dbl&gt; 300, 472, 3800, 3200, 39600, 230...
-```
-
----
-
-# Datenexploration mit dplyr
-
-Fünf Befehle, die die Datenaufbereitung und -analyse unterstützen (vgl. [Wickham &amp; Grolemund 2017](https://r4ds.had.co.nz/transform.html) &amp; [Cheatsheet](https://github.com/rstudio/cheatsheets/raw/master/data-transformation.pdf)):
-
-&lt;img src="Figures/dplyr_table.PNG" width="100%" /&gt;
-
----
-
-# Kombination von Befehlen
-
-
-```r
-# (1) Kopie des Datensatzes
-stdm.copy &lt;- studium.df
-# (2) Select: Name, Kino, Einwohner
-stdm.copy &lt;- select(stdm.copy, name, anzahl_kinos, einwohnerzahl_stadt)
-# (3) Erstelle Kinos pro Kopf
-stdm.copy &lt;- mutate(stdm.copy, kino_pc = anzahl_kinos / einwohnerzahl_stadt)
-# (4) Wähle Fälle &gt; Median(Kino pro Kopf)
-stdm.copy &lt;- filter(stdm.copy, kino_pc &gt; median(kino_pc, na.rm = TRUE))
-# (5) Sortiere Kino pro Kopf (absteigend)
-stdm.copy &lt;- arrange(stdm.copy, desc(kino_pc))
-
-glimpse(stdm.copy)
-```
-
-```
-## Observations: 27
-## Variables: 4
-## $ name                &lt;chr&gt; "ku-eichstaett-ingolstadt", "uni-freiburg-...
-## $ anzahl_kinos        &lt;dbl&gt; 5, 13, 9, 2, 4, 4, 15, 2, 3, 2, 108, 108, ...
-## $ einwohnerzahl_stadt &lt;dbl&gt; 13100, 38732, 107500, 28962, 63315, 85500,...
-## $ kino_pc             &lt;dbl&gt; 3.816794e-04, 3.356398e-04, 8.372093e-05, ...
-```
-
----
-
-# Nachteile
-
-- ausführlich (Tippfehler!)
-- viele Kopien eines Datensatzes
-- redundant
-
-Weitere Möglichkeit:
-
-
-```r
-arrange(filter(mutate(select(studium.df, name, anzahl_kinos, einwohnerzahl_stadt), kino_pc = anzahl_kinos / einwohnerzahl_stadt), kino_pc &gt; median(kino_pc, na.rm = TRUE)), desc(kino_pc))
-```
-
-```
-## # A tibble: 27 x 4
-##    name                     anzahl_kinos einwohnerzahl_stadt   kino_pc
-##    &lt;chr&gt;                           &lt;dbl&gt;               &lt;dbl&gt;     &lt;dbl&gt;
-##  1 ku-eichstaett-ingolstadt            5               13100 0.000382 
-##  2 uni-freiburg-schweiz               13               38732 0.000336 
-##  3 fau-erlangen-nuernberg              9              107500 0.0000837
-##  4 tu-ilmenau                          2               28962 0.0000691
-##  5 uni-weimar                          4               63315 0.0000632
-##  6 uni-tuebingen                       4               85500 0.0000468
-##  7 uni-zuerich                        15              366765 0.0000409
-##  8 dhbw-ravensburg                     2               49098 0.0000407
-##  9 uni-bamberg                         3               75743 0.0000396
-## 10 zeppelin-uni                        2               59000 0.0000339
-## # ... with 17 more rows
-```
-
----
-
-## Die Pipe (%&gt;%)
-
-&lt;img src="Figures/pipe_hex.PNG" width="10%" /&gt;
-
-Pipe-Operator: `%&gt;%`
-
-- verknüpft Befehle
-- wird als "und dann" gelesen
-
---
-
-1. Verwende den Datensatz `studium.df` (dann `%&gt;%`) 
-2. Wähle Variablen aus (dann `%&gt;%`)
-3. Erzeuge die Variable `kino_pc` (dann `%&gt;%`) 
-4. Verwende Fälle, die größer als der Median sind (dann `%&gt;%`)
-5. Sortiere den Datensatz (abnehmende Kinozahl pro Kopf)
-
-
-```r
-studium.df %&gt;%    
-  select(name, anzahl_kinos, einwohnerzahl_stadt) %&gt;%
-  mutate(kino_pc = anzahl_kinos / einwohnerzahl_stadt) %&gt;%
-  filter(kino_pc &gt; median(kino_pc, na.rm = TRUE)) %&gt;%
-  arrange(desc(kino_pc))
-```
-
----
-
-# Komplexe Rekodierung
-
-[case_when](https://dplyr.tidyverse.org/reference/case_when.html):
-
-
-```r
-studium.df &lt;- studium.df %&gt;%
-  mutate(
-    stadt_typ = case_when(
-      einwohnerzahl_stadt &lt; 100000 ~ "stadt",
-      einwohnerzahl_stadt &lt; 500000 ~ "großstadt",
-      einwohnerzahl_stadt &gt; 500000 ~ "metropole",
-      TRUE ~ NA_character_))
-```
-
----
-
-# Übungen
-
-- Wie teuer ist ein Semesterticket im Durchschnitt?
-- Welche zehn Städte bieten das günstigste Ticket?
-- Unterscheidet Ticketpreis nach Stadttyp (Stadt/Großstadt/Metropole)? (Tipp: `?group_by`)
-
----
-
-# Visualisierung
-
-Paket: ggplot2 (Einführung: [Healy 2018](http://socviz.co/))
-
-&lt;img src="WebScraping-Muenster_files/figure-html/ggplot2_exm-1.png" width="70%" /&gt;
-
----
-
-# 3. Web Scraping
+# 2. Web Scraping
 
 &gt; "...something big is going on" ([Salganik 2018: 2](https://www.bitbybitbook.com/en/1st-ed/preface/))
 
@@ -353,7 +150,7 @@ response &lt;- GET("https://www.wahlrecht.de/umfragen/index.htm") %&gt;%
 
 ```
 ## Response [https://www.wahlrecht.de/umfragen/index.htm]
-##   Date: 2019-05-16 09:52
+##   Date: 2019-05-16 18:22
 ##   Status: 200
 ##   Content-Type: text/html
 ##   Size: 40.1 kB
@@ -382,9 +179,9 @@ library(rvest)
 survey &lt;- response %&gt;% 
   read_html() %&gt;% 
   html_table(".wilko", 
-             header = TRUE, 
-             fill = TRUE) %&gt;%
-  .[[2]] %&gt;%
+             header = TRUE,    # first row: header
+             fill = TRUE) %&gt;%  # fill with NA
+  .[[2]] %&gt;%                   # select data frame
   glimpse()
 ```
 
@@ -486,7 +283,7 @@ HTML:
 
 ---
 
-# Web Scraping in R I
+# 2a) Web Scraping: Generelles Schema
 
 Web Scraping-Projekte folgen einem generellen Schema:
 
@@ -501,13 +298,26 @@ Quelle: [Wickham &amp; Grolemund (2018)](https://r4ds.had.co.nz/introduction.htm
 
 ---
 
-# Web Scraping in R II
+# Web Scraping in R
+
+&lt;img src="Figures/rvest.PNG" width="8%" /&gt;
 
 .pull-left[
 
+1. Internetseite kennenlernen
+2. Import von HTML-Dateien
+3. Information isolieren
+4. Iteration (loops)
+
+]
+
+--
+
+.pull-right[
+
 Das generelle Schema lässt sich in R über das Paket [`rvest`](https://github.com/hadley/rvest) umsetzen:
 
-1. Kennenlernen der Internetseite [(u.a. `robotstxt`)](https://github.com/ropensci/robotstxt)
+1. u.a. [`robotstxt`](https://github.com/ropensci/robotstxt)
 2. `read_html`: Import von HTML/XML-Dateien
 3. Information isolieren
     - `html_nodes`: Extrahiert Teile des HTML-Dokument mit Hilfe von XPath/CSS-Selektoren
@@ -516,21 +326,17 @@ Das generelle Schema lässt sich in R über das Paket [`rvest`](https://github.c
 
 ]
 
-.pull-right[
-
-&lt;img src="Figures/rvest.PNG" width="50%" /&gt;
-
-]
+--
 
 ---
 
 # Beispiel: Sonntagsfrage
 
-- Sonntagsfrage
-    - von verschiedenen Umfrageinstituten erhoben [(Wahlrecht.de)](https://www.wahlrecht.de/umfragen/)
+- **Sonntagsfrage**
+    - von verschiedenen Umfrageinstituten erhoben ([Wahlrecht.de](https://www.wahlrecht.de/umfragen/))
     - Archivfunktion (zeitlicher Verlauf)
     
-Ziel: Aktuelle Umfragen aller Institute herunterladen und kombinieren.
+**Ziel**: Aktuelle Umfragen aller Institute herunterladen und kombinieren.
 
 &lt;img src="Figures/Sonntagsfrage.PNG" width="50%" /&gt;
 
@@ -676,6 +482,8 @@ html.table &lt;- html.node %&gt;%
 ## $ Sonstige  &lt;chr&gt; "4,0 %", "4,0 %", "4,0 %", "4,0 %", "4,0 %", "4,0 %"...
 ```
 
+zum Subsetting: [Wickham(2019)](https://adv-r.hadley.nz/subsetting.html)
+
 ---
 
 # Exkurs: Regex
@@ -699,8 +507,8 @@ str_view(string = "Wir benötigen nicht den gesamten Text, sondern die 42.",
          pattern = "[:digit:]+")
 ```
 
-<div id="htmlwidget-d4783051853041b61552" style="width:960px;height:100%;" class="str_view html-widget"></div>
-<script type="application/json" data-for="htmlwidget-d4783051853041b61552">{"x":{"html":"<ul>\n  <li>Wir benötigen nicht den gesamten Text, sondern die <span class='match'>42<\/span>.<\/li>\n<\/ul>"},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-a545bd50fca465ffcb38" style="width:960px;height:100%;" class="str_view html-widget"></div>
+<script type="application/json" data-for="htmlwidget-a545bd50fca465ffcb38">{"x":{"html":"<ul>\n  <li>Wir benötigen nicht den gesamten Text, sondern die <span class='match'>42<\/span>.<\/li>\n<\/ul>"},"evals":[],"jsHooks":[]}</script>
 
 ]
 
@@ -717,8 +525,8 @@ str_view(string = html.table$`CDU/CSU`[1:5],
          pattern = "[:digit:]+,?[:digit:]?")
 ```
 
-<div id="htmlwidget-eec220a821ececaa6fd1" style="width:960px;height:100%;" class="str_view html-widget"></div>
-<script type="application/json" data-for="htmlwidget-eec220a821ececaa6fd1">{"x":{"html":"<ul>\n  <li><span class='match'>30,0<\/span> %<\/li>\n  <li><span class='match'>30,0<\/span> %<\/li>\n  <li><span class='match'>30,0<\/span> %<\/li>\n  <li><span class='match'>31,5<\/span> %<\/li>\n  <li><span class='match'>29,0<\/span> %<\/li>\n<\/ul>"},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-0792f598b47f426298b7" style="width:960px;height:100%;" class="str_view html-widget"></div>
+<script type="application/json" data-for="htmlwidget-0792f598b47f426298b7">{"x":{"html":"<ul>\n  <li><span class='match'>30,0<\/span> %<\/li>\n  <li><span class='match'>30,0<\/span> %<\/li>\n  <li><span class='match'>30,0<\/span> %<\/li>\n  <li><span class='match'>31,5<\/span> %<\/li>\n  <li><span class='match'>29,0<\/span> %<\/li>\n<\/ul>"},"evals":[],"jsHooks":[]}</script>
 
 ---
 
@@ -855,7 +663,7 @@ URL:
 
 --
 
-Kombination von statischem und dynamischen Teil:
+Kombination der Teile:
 
 
 ```r
@@ -875,7 +683,7 @@ links.df &lt;- tibble(
 
 ---
 
-# Exkurs: Funktionen
+### Funktionen
 
 &lt;img src="Figures/function_fig.PNG" width="60%" /&gt;
 
@@ -926,8 +734,6 @@ spon_scraper &lt;- function(x) {
   title &lt;- page %&gt;%
     html_nodes(".search-teaser .headline") %&gt;%
     html_text()
-  
-  df &lt;- tibble(date, title)
 
   teaser &lt;- page %&gt;%
     html_nodes(".article-intro") %&gt;%
@@ -961,11 +767,17 @@ spon.df &lt;- map_dfr(
 spon.df &lt;- readRDS(gzcon(url("https://github.com/FabianFox/Webscraping-Muenster-/blob/master/Data/SPON-Data.RDS?raw=true")))
 ```
 
-&lt;img src="WebScraping-Muenster_files/figure-html/load_spon-1.png" width="60%" /&gt;
+&lt;img src="WebScraping-Muenster_files/figure-html/load_spon-1.png" width="50%" /&gt;
 
 ---
 
-# 3b. Spezielle Technologien
+# Medienhype: Martin Schulz
+
+&lt;img src="WebScraping-Muenster_files/figure-html/schulz_final-1.png" width="70%" /&gt;
+
+---
+
+# 2b. Spezielle Technologien
 
 Spezielle Möglichkeiten &amp; Herausforderungen:
 
@@ -973,23 +785,25 @@ Spezielle Möglichkeiten &amp; Herausforderungen:
 
 - **erleichtert** den Zugriff auf Daten über spezifische Schnittstellen
     - Beispiele: [Twitter](https://developer.twitter.com/en.html), [Die Zeit](http://developer.zeit.de/index/), [Eurostat](https://ec.europa.eu/eurostat/web/json-and-unicode-web-services), [Wikipedia](https://github.com/Ironholds/WikipediR/)
+    - in R: [rtweet](https://github.com/mkearney/rtweet), [diezeit](https://github.com/chgrl/diezeit), [eurostat](https://github.com/rOpenGov/eurostat), [WikipediR](https://github.com/Ironholds/WikipediR/)
     
 Dynamische Webseiten &amp; bot blocking:
 
 - **erschwert** Zugriff, da Daten erst nach Nutzeranfragen erzeugt werden
-    - Beispiele: Süddeutsche Zeitung (Archiv), ArtFacts
+    - Beispiele: Süddeutsche Zeitung (Archiv), ArtFacts, GIZ
+    - viele soziale Medien
 
 ---
 
 # APIs: Steigende Relevanz
 
-&lt;img src="WebScraping-Muenster_files/figure-html/unnamed-chunk-9-1.png" width="70%" /&gt;
+[(Code)](https://github.com/FabianFox/Webscraping-Muenster-/blob/master/Code/programmableweb-Scraper.R)
 
-Quelle: Eigene Darstellung [(Code)](https://github.com/FabianFox/Webscraping-Hamburg-/blob/master/Code/programmableweb-Scraper.R)
+&lt;img src="WebScraping-Muenster_files/figure-html/unnamed-chunk-9-1.png" width="70%" /&gt;
 
 ---
 
-# 4. Rechtliche Aspekte
+# 3. Rechtliche Aspekte
 
 &gt; "Big data? Cheap. Lawyers? Not so much." (Pete Warden zit. in [Mitchell 2015: 217](http://shop.oreilly.com/product/0636920034391.do))
 
@@ -1000,7 +814,7 @@ Quelle: Eigene Darstellung [(Code)](https://github.com/FabianFox/Webscraping-Ham
 
 ---
 
-# 4. Rechtliche Aspekte in der Praxis
+# Rechtliche Aspekte: Praxis
 
 Ziel: "friendly scraping" 
 
@@ -1017,9 +831,33 @@ Ziel: "friendly scraping"
 
 # 5. Weitere Beispiele und Anwendungen
 
+- [studium.org](https://github.com/FabianFox/Webscraping-Muenster-/blob/master/Code/programmableweb-Scraper.R)
+- JavaScript-Seiten: [ArtFacts](https://github.com/FabianFox/Webscraping-Muenster-/blob/master/Code/ArtFacts-Scraper.R)
+- weitere Beispiele... (Transfermarkt, GIZ)
+- Diskussion studentischer Projekte und Ideen
+
 ---
 
 # 6. Weiterlernen
+
+Bücher:
+
+- Wickham &amp; Grolemund (2017) R for Data Science [(online)](https://r4ds.had.co.nz/)
+- Healy (2018) Data Visualization [(online)](https://socviz.co/index.html)
+- Phillips (2018) YaRrr! The Pirate’s Guide to R [(online)](https://bookdown.org/ndphillips/YaRrr/)
+
+Interaktiv:
+
+- RStudioPrimers [(online)](https://rstudio.cloud/learn/primers)
+- swirl: Learn R, in R [(Installation)](https://swirlstats.com/students.html)
+
+Kurzanleitungen:
+
+- Cheatsheets [(online)](https://www.rstudio.com/resources/cheatsheets/)
+
+Weiterführend:
+- Sammlung von Lernressourcen auf RStudio [(online)](https://www.rstudio.com/resources/)
+- Lerncommunity: [TidyTuesdays](https://github.com/rfordatascience/tidytuesday)
     </textarea>
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
