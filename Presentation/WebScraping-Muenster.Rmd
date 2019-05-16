@@ -10,7 +10,7 @@ output:
       highlightStyle: github
       highlightLines: true
       countIncrementalSlides: false
-
+      
 ---
 
 # Inhalt
@@ -24,21 +24,20 @@ p_load(tidyverse, rvest, httr, robotstxt, qdap, janitor, lubridate,
 ```
 
 1. Einleitung
-2. Crashkurs R
-3. Web Scraping
+2. Web Scraping
     + Technologien des WWW
     + Web Scraping in R
         + a) Generelles Schema
         + b) Spezielle Technologien
-4. Rechtliche & ethische Aspekte
-5. Weitere Beispiele und Anwendungen
-6. Weiterlernen
+3. Rechtliche & ethische Aspekte
+4. Weitere Beispiele und Anwendungen
+5. Weiterlernen
 
 ---
 
 # Zur Präsentation
 
-- Folien sind online verfügbar: https://github.com/FabianFox/Webscraping-Muenster-/
+- Folien sind online verfügbar: https://bit.ly/2Hw1pKl
     - Folien herunterladen und im Browser öffnen
 - Beispiele auf [GitHub](https://github.com/FabianFox/Webscraping-Muenster-)
 - Benötigte Pakete über: 
@@ -54,205 +53,17 @@ p_load(tidyverse, rvest, httr, robotstxt, qdap, janitor,
 
 # 1. Einleitung
 
-Ziele des Workshops
+Ziele des Workshops:
+
+- Web Scraping als Methode
+    - Grundlagen: WWW
+    - Umsetzung in R
+    - Beispiele
+- Quellen zum Selbststudium kennenlernen
 
 ---
 
-# 2. Crashkurs R
-
-- Fokus auf Datentypen & -aufbereitung mit [dplyr](https://dplyr.tidyverse.org/)
-- Daten zur [Studienwahl](https://www.studium.org/kommunikationswissenschaft/uebersicht-universitaeten) im Feld "Medien- und Kommunikationswissenschaften"
-
-Nachlesen:
-
-- Wickham & Grolemund (2017) ["R for Data Science"](https://r4ds.had.co.nz/)
-- Tutorial von [RStudio](https://rstudio.cloud/learn/primers)
-
----
-
-# Datentypen
-
-
-
----
-
-# Daten: Studium.org
-
-```{r studium_fig, out.width = "80%", echo = FALSE}
-# https://www.studium.org/kommunikationswissenschaft/uni-muenster
-include_graphics("Figures/StudiumOrg-Muenster.PNG")
-```
-
-Studienwahl: Medien- und Kommunikationswissenschaften
-
-- Wo soll ich studieren?
-- Was gibt mein Geldbeutel her?
-- Was bietet der Studienort an kulturellen Angeboten?
-
----
-
-# Daten: Studium.org II
-
-- 56 Datenpunkte (eben soviele Einzelseiten, z.B. [Münster](https://www.studium.org/kommunikationswissenschaft/uni-muenster))
-- Copy&Paste mühsam und fehleranfällig
-- Anwendungsbeispiel: Web Scraping (s. [Skript](https://github.com/FabianFox/Webscraping-Muenster-/blob/master/Code/StudiumOrg-KoWi-Scraper.R))
-
-Datensatz laden:
-
-```{r studi_df, echo = TRUE, eval = TRUE}
-# empfohlen
-studium.df <- readRDS(gzcon(url("https://github.com/FabianFox/Webscraping-Muenster-/blob/master/Data/KoWi-Institute.RDS?raw=true")))
-
-# Skript ausführen (Dauer: ~5min)
-# devtools::source_url("https://raw.githubusercontent.com/FabianFox/Webscraping-Hamburg-/master/Code/SoziologieOrg-Scraper.R")
-```
-
----
-
-# Daten: Studium.org III
-
-Welche Variablen stehen zur Verfügung?
-
-```{r describe_df, echo = TRUE, eval = TRUE}
-# (1) dplyr laden
-library(dplyr)
-
-# (2) Überblick
-glimpse(studium.df)
-```
-
----
-
-# Datenexploration mit dplyr
-
-Fünf Befehle, die die Datenaufbereitung und -analyse unterstützen (vgl. [Wickham & Grolemund 2017](https://r4ds.had.co.nz/transform.html) & [Cheatsheet](https://github.com/rstudio/cheatsheets/raw/master/data-transformation.pdf)):
-
-```{r dplyr_fig, out.width = "100%", echo = FALSE}
-include_graphics("Figures/dplyr_table.PNG")
-```
-
----
-
-# Kombination von Befehlen
-
-```{r dplyr_cmb, echo = TRUE, eval = TRUE}
-# (1) Kopie des Datensatzes
-stdm.copy <- studium.df
-# (2) Select: Name, Kino, Einwohner
-stdm.copy <- select(stdm.copy, name, anzahl_kinos, einwohnerzahl_stadt)
-# (3) Erstelle Kinos pro Kopf
-stdm.copy <- mutate(stdm.copy, kino_pc = anzahl_kinos / einwohnerzahl_stadt)
-# (4) Wähle Fälle > Median(Kino pro Kopf)
-stdm.copy <- filter(stdm.copy, kino_pc > median(kino_pc, na.rm = TRUE))
-# (5) Sortiere Kino pro Kopf (absteigend)
-stdm.copy <- arrange(stdm.copy, desc(kino_pc))
-
-glimpse(stdm.copy)
-```
-
----
-
-# Nachteile
-
-- ausführlich (Tippfehler!)
-- viele Kopien eines Datensatzes
-- redundant
-
-Weitere Möglichkeit:
-
-```{r bad_chain, echo = TRUE, eval = TRUE}
-arrange(filter(mutate(select(studium.df, name, anzahl_kinos, einwohnerzahl_stadt), kino_pc = anzahl_kinos / einwohnerzahl_stadt), kino_pc > median(kino_pc, na.rm = TRUE)), desc(kino_pc))
-```
-
----
-
-## Die Pipe (%>%)
-
-```{r magrittr_fig, echo = FALSE, out.width = "10%"}
-include_graphics("Figures/pipe_hex.PNG")
-```
-
-Pipe-Operator: `%>%`
-
-- verknüpft Befehle
-- wird als "und dann" gelesen
-
---
-
-1. Verwende den Datensatz `studium.df` (dann `%>%`) 
-2. Wähle Variablen aus (dann `%>%`)
-3. Erzeuge die Variable `kino_pc` (dann `%>%`) 
-4. Verwende Fälle, die größer als der Median sind (dann `%>%`)
-5. Sortiere den Datensatz (abnehmende Kinozahl pro Kopf)
-
-```{r pipe_exm, echo = TRUE, eval = FALSE}
-studium.df %>%    
-  select(name, anzahl_kinos, einwohnerzahl_stadt) %>%
-  mutate(kino_pc = anzahl_kinos / einwohnerzahl_stadt) %>%
-  filter(kino_pc > median(kino_pc, na.rm = TRUE)) %>%
-  arrange(desc(kino_pc))
-```
-
----
-
-# Komplexe Rekodierung
-
-[case_when](https://dplyr.tidyverse.org/reference/case_when.html):
-
-```{r case_group, echo = TRUE, eval = TRUE}
-studium.df <- studium.df %>%
-  mutate(
-    stadt_typ = case_when(
-      einwohnerzahl_stadt < 100000 ~ "stadt",
-      einwohnerzahl_stadt < 500000 ~ "großstadt",
-      einwohnerzahl_stadt > 500000 ~ "metropole",
-      TRUE ~ NA_character_))
-```
-
----
-
-# Übungen
-
-- Wie teuer ist ein Semesterticket im Durchschnitt?
-- Welche zehn Städte bieten das günstigste Ticket?
-- Unterscheidet Ticketpreis nach Stadttyp (Stadt/Großstadt/Metropole)? (Tipp: `?group_by`)
-
----
-
-# Visualisierung
-
-Paket: ggplot2 (Einführung: [Healy 2018](http://socviz.co/))
-
-```{r ggplot2_exm, echo = FALSE, eval = TRUE, out.width = "70%", dpi = 300}
-studium.df %>% 
-  filter(!is.na(sonnenstunden_pro_jahr)) %>%
-  ggplot() +
-  geom_point(aes(fct_reorder(name, sonnenstunden_pro_jahr), sonnenstunden_pro_jahr), 
-             stat = "identity") +
-  labs(title = "Deutsche KoWi-Institute nach Sonnenstunden im Jahr",
-       subtitle = paste0("Die Differenz zwischen Berlin und Münster beträgt ", 
-                         round(
-                           abs(
-                             studium.df$sonnenstunden_pro_jahr[studium.df$name == "uni-muenster"] -
-                             studium.df$sonnenstunden_pro_jahr[studium.df$name == "udk-berlin"]) /
-                             24, 
-                           digits = 1),
-                         " Sonnentage im Jahr."),
-       x = "", y = "", caption = "Quelle: studium.org") +
-  geom_point(data = subset(studium.df, name %in% c("uni-muenster", "udk-berlin")),
-             aes(fct_reorder(name, sonnenstunden_pro_jahr), sonnenstunden_pro_jahr), 
-             stat = "identity", color = "red", size = 4) +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1), 
-        panel.grid.minor.x = element_blank(),
-        panel.grid.major.x = element_blank(),
-        text = element_text(size = 10),
-        axis.ticks = element_line(size = .5))
-```
-
----
-
-# 3. Web Scraping
+# 2. Web Scraping
 
 > "...something big is going on" ([Salganik 2018: 2](https://www.bitbybitbook.com/en/1st-ed/preface/))
 
@@ -352,9 +163,9 @@ library(rvest)
 survey <- response %>% 
   read_html() %>% 
   html_table(".wilko", 
-             header = TRUE, 
-             fill = TRUE) %>%
-  .[[2]] %>%
+             header = TRUE,    # first row: header
+             fill = TRUE) %>%  # fill with NA
+  .[[2]] %>%                   # select data frame
   glimpse()
 ```
 
@@ -470,7 +281,7 @@ include_graphics("Figures/JavaScript-Example.PNG")
 
 ---
 
-# Web Scraping in R I
+# 2a) Web Scraping: Generelles Schema
 
 Web Scraping-Projekte folgen einem generellen Schema:
 
@@ -488,13 +299,29 @@ Quelle: [Wickham & Grolemund (2018)](https://r4ds.had.co.nz/introduction.html)
 
 ---
 
-# Web Scraping in R II
+# Web Scraping in R
+
+```{r, out.width = "8%", echo = FALSE}
+# Source: http://hexb.in/
+include_graphics("Figures/rvest.PNG")
+```
 
 .pull-left[
 
+1. Internetseite kennenlernen
+2. Import von HTML-Dateien
+3. Information isolieren
+4. Iteration (loops)
+
+]
+
+--
+
+.pull-right[
+
 Das generelle Schema lässt sich in R über das Paket [`rvest`](https://github.com/hadley/rvest) umsetzen:
 
-1. Kennenlernen der Internetseite [(u.a. `robotstxt`)](https://github.com/ropensci/robotstxt)
+1. u.a. [`robotstxt`](https://github.com/ropensci/robotstxt)
 2. `read_html`: Import von HTML/XML-Dateien
 3. Information isolieren
     - `html_nodes`: Extrahiert Teile des HTML-Dokument mit Hilfe von XPath/CSS-Selektoren
@@ -503,24 +330,17 @@ Das generelle Schema lässt sich in R über das Paket [`rvest`](https://github.c
 
 ]
 
-.pull-right[
-
-```{r, out.width = "50%", echo = FALSE}
-# Source: http://hexb.in/
-include_graphics("Figures/rvest.PNG")
-```
-
-]
+--
 
 ---
 
 # Beispiel: Sonntagsfrage
 
-- Sonntagsfrage
-    - von verschiedenen Umfrageinstituten erhoben [(Wahlrecht.de)](https://www.wahlrecht.de/umfragen/)
+- **Sonntagsfrage**
+    - von verschiedenen Umfrageinstituten erhoben ([Wahlrecht.de](https://www.wahlrecht.de/umfragen/))
     - Archivfunktion (zeitlicher Verlauf)
     
-Ziel: Aktuelle Umfragen aller Institute herunterladen und kombinieren.
+**Ziel**: Aktuelle Umfragen aller Institute herunterladen und kombinieren.
 
 ```{r, out.width = "50%", echo = FALSE}
 # Source: https://www.tagesschau.de/inland/deutschlandtrend/
@@ -633,6 +453,8 @@ html.table <- html.node %>%
   .[4:nrow(.), c(1, 3:9)] %>%                # subsetting
   glimpse()
 ```
+
+zum Subsetting: [Wickham(2019)](https://adv-r.hadley.nz/subsetting.html)
 
 ---
 
@@ -883,7 +705,7 @@ URL:
 
 --
 
-Kombination von statischem und dynamischen Teil:
+Kombination der Teile:
 
 ```{r iteration_element, echo = TRUE, eval = TRUE}
 links.df <- tibble(
@@ -896,7 +718,7 @@ links.df <- tibble(
 
 ---
 
-# Exkurs: Funktionen
+### Funktionen
 
 ```{r function_fig, out.width = "60%", echo = FALSE}
 # Source: https://adv-r.hadley.nz/functions.html
@@ -940,8 +762,6 @@ spon_scraper <- function(x) {
   title <- page %>%
     html_nodes(".search-teaser .headline") %>%
     html_text()
-  
-  df <- tibble(date, title)
 
   teaser <- page %>%
     html_nodes(".article-intro") %>%
@@ -974,7 +794,6 @@ spon.df <- readRDS(gzcon(url("https://github.com/FabianFox/Webscraping-Muenster-
 ```
 
 ```{r load_spon, echo = FALSE, eval = TRUE, dpi = 300, out.width = "50%"}
-# empfohlen
 spon.df <- readRDS("./Data/SPON-Data.RDS") %>%
   mutate(vweek = round_date(date, unit = "week")) %>%
   add_count(vweek) %>%
@@ -995,11 +814,65 @@ ggplot(spon.df) +
 
 ---
 
+# Medienhype: Martin Schulz
 
+```{r schulz_final, echo = FALSE, eval = TRUE, dpi = 300, out.width = "70%"}
+spon.df <- readRDS("./Data/SPON-Data.RDS") %>%
+  filter(between(date, ymd("2017-01-01"), ymd("2018-02-28"))) %>%
+  mutate(vweek = round_date(date, unit = "week"),
+         lag_week = ymd(vweek) - days(7)) %>%
+  add_count(lag_week) %>%
+  distinct(lag_week, .keep_all = TRUE)
+
+schulz.plot <- ggplot(spon.df) +
+  geom_bar(aes(x = lag_week, y = n), size = 1.5,
+           stat = "identity") +
+  scale_x_date(limits=as.Date(c("2016-12-01", "2018-02-28")), labels = scales::date_format("%b-%Y")) +
+  labs(x = "", y = "", 
+       title = "SPON-Artikel zu 'Martin Schulz'",
+       subtitle = "Artikel pro Woche (lagged um eine Woche)",
+       caption = "Spiegel.de (Archiv)") +
+  theme_minimal() +
+  theme(panel.grid.minor.x = element_blank(),
+        panel.grid.major.x = element_blank(),
+        text = element_text(size = 10),
+        axis.ticks = element_line(size = .5))
+
+election2017.plot <- ggplot(subset(election.df, party == "SPD")) +
+  geom_line(aes(x = zeitpunkt, y = vote, color = party), size = 1.5) +
+  annotate(geom = "text", label = "Saarland-Wahl\n(SPD: 29,5%)", x = ymd("2017-03-24"), y = 4, size = 3) +
+  annotate(geom = "rect", xmin =  ymd("2017-03-19"), xmax = ymd("2017-03-26"), ymin = 0, ymax = Inf, alpha = .2) +
+  annotate(geom = "text", label = "SH-Wahl\n(SPD: 27,3%)", x = ymd("2017-05-07"), y = 4, size = 3) +
+  annotate(geom = "rect", xmin =  ymd("2017-05-07"), xmax = ymd("2017-05-12"), ymin = 0, ymax = Inf, alpha = .2) +
+  annotate(geom = "text", label = "NRW-Wahl\n(SPD: 31,2%)", x = ymd("2017-05-14"), y = 12, size = 3) +
+  annotate(geom = "rect", xmin =  ymd("2017-05-14"), xmax = ymd("2017-05-21"), ymin = 0, ymax = Inf, alpha = .2) +
+  annotate(geom = "text", label = "BT-Wahl\n(SPD: 20,5%)", x = ymd("2017-09-24"), y = 8, size = 3) +
+  annotate(geom = "rect", xmin =  ymd("2017-09-24"), xmax = ymd("2017-10-01"), ymin = 0, ymax = Inf, alpha = .2) +
+  annotate(geom = "text", label = "SPD-Kanzlerkandidat", x = ymd("2017-01-29"), y = 16, size = 3) +
+  annotate(geom = "rect", xmin =  ymd("2017-01-29"), xmax = ymd("2017-02-05"), ymin = 0, ymax = Inf, alpha = .2) +
+  annotate(geom = "text", label = "SPD-Parteivorsitz", x = ymd("2017-03-19"), y = 12, size = 3) +
+  annotate(geom = "rect", xmin =  ymd("2017-03-19"), xmax = ymd("2017-03-26"), ymin = 0, ymax = Inf, alpha = .2) +
+  scale_color_manual(values = c("#EB001F"),
+                   guide = guide_legend(title = NULL)) +
+  labs(x = "", y = "", 
+       title = "Sonntagsfrage: Wenn am nächsten Sonntag Bundestagswahl wäre...",
+       caption = "Wahlrecht.de (Forsa)") +
+  scale_y_continuous(labels = function(x) paste0(x, "%")) +
+  scale_x_date(limits=as.Date(c("2016-12-01", "2018-02-28")), labels = scales::date_format("%b-%Y")) +
+  theme_minimal() +
+  theme(panel.grid.minor.x = element_blank(),
+        panel.grid.major.x = element_blank(),
+        text = element_text(size = 10),
+        axis.ticks = element_line(size = .5),
+        legend.position = "none")
+
+plot_grid(election2017.plot, schulz.plot, ncol = 1, 
+          align = "v", axis = "b")
+```
 
 ---
 
-# 3b. Spezielle Technologien
+# 2b. Spezielle Technologien
 
 Spezielle Möglichkeiten & Herausforderungen:
 
@@ -1007,18 +880,28 @@ Spezielle Möglichkeiten & Herausforderungen:
 
 - **erleichtert** den Zugriff auf Daten über spezifische Schnittstellen
     - Beispiele: [Twitter](https://developer.twitter.com/en.html), [Die Zeit](http://developer.zeit.de/index/), [Eurostat](https://ec.europa.eu/eurostat/web/json-and-unicode-web-services), [Wikipedia](https://github.com/Ironholds/WikipediR/)
+    - in R: [rtweet](https://github.com/mkearney/rtweet), [diezeit](https://github.com/chgrl/diezeit), [eurostat](https://github.com/rOpenGov/eurostat), [WikipediR](https://github.com/Ironholds/WikipediR/)
     
 Dynamische Webseiten & bot blocking:
 
 - **erschwert** Zugriff, da Daten erst nach Nutzeranfragen erzeugt werden
-    - Beispiele: Süddeutsche Zeitung (Archiv), ArtFacts
+    - Beispiele: Süddeutsche Zeitung (Archiv), ArtFacts, GIZ
+    - viele soziale Medien
 
 ---
 
 # APIs: Steigende Relevanz
 
+[(Code)](https://github.com/FabianFox/Webscraping-Muenster-/blob/master/Code/programmableweb-Scraper.R)
+
 ```{r echo = FALSE, eval = TRUE, dpi = 300, out.width = "70%"}
-api.plot.df <- readRDS(file = "C:/Users/guelzauf/Seafile/Meine Bibliothek/Projekte/Webscraping-Hamburg-/Slides/Figures/api_plot_df.RDS")
+api.plot.df <- readRDS(file = "./Data/programmableweb_data.RDS") %>%
+  group_by(Submitted) %>%
+  count() %>%
+  ungroup() %>%
+  arrange(Submitted) %>%
+  filter(!is.na(Submitted)) %>%
+  mutate(cumulative.n = cumsum(n))
 
 ggplot(api.plot.df, aes(x = Submitted, y = cumulative.n)) +
   geom_line(stat = "identity") +
@@ -1034,11 +917,9 @@ ggplot(api.plot.df, aes(x = Submitted, y = cumulative.n)) +
         axis.ticks = element_line(size = .5))
 ```
 
-Quelle: Eigene Darstellung [(Code)](https://github.com/FabianFox/Webscraping-Hamburg-/blob/master/Code/programmableweb-Scraper.R)
-
 ---
 
-# 4. Rechtliche Aspekte
+# 3. Rechtliche Aspekte
 
 > "Big data? Cheap. Lawyers? Not so much." (Pete Warden zit. in [Mitchell 2015: 217](http://shop.oreilly.com/product/0636920034391.do))
 
@@ -1049,7 +930,7 @@ Quelle: Eigene Darstellung [(Code)](https://github.com/FabianFox/Webscraping-Ham
 
 ---
 
-# 4. Rechtliche Aspekte in der Praxis
+# Rechtliche Aspekte: Praxis
 
 Ziel: "friendly scraping" 
 
@@ -1066,6 +947,30 @@ Ziel: "friendly scraping"
 
 # 5. Weitere Beispiele und Anwendungen
 
+- [studium.org](https://github.com/FabianFox/Webscraping-Muenster-/blob/master/Code/programmableweb-Scraper.R)
+- JavaScript-Seiten: [ArtFacts](https://github.com/FabianFox/Webscraping-Muenster-/blob/master/Code/ArtFacts-Scraper.R)
+- weitere Beispiele... (Transfermarkt, GIZ)
+- Diskussion studentischer Projekte und Ideen
+
 ---
 
 # 6. Weiterlernen
+
+Bücher:
+
+- Wickham & Grolemund (2017) R for Data Science [(online)](https://r4ds.had.co.nz/)
+- Healy (2018) Data Visualization [(online)](https://socviz.co/index.html)
+- Phillips (2018) YaRrr! The Pirate’s Guide to R [(online)](https://bookdown.org/ndphillips/YaRrr/)
+
+Interaktiv:
+
+- RStudioPrimers [(online)](https://rstudio.cloud/learn/primers)
+- swirl: Learn R, in R [(Installation)](https://swirlstats.com/students.html)
+
+Kurzanleitungen:
+
+- Cheatsheets [(online)](https://www.rstudio.com/resources/cheatsheets/)
+
+Weiterführend:
+- Sammlung von Lernressourcen auf RStudio [(online)](https://www.rstudio.com/resources/)
+- Lerncommunity: [TidyTuesdays](https://github.com/rfordatascience/tidytuesday)
