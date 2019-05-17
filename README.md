@@ -29,6 +29,14 @@ Department of Communication, University of Münster
 
 Fabian Gülzau, HU Berlin ([Website](https://fguelzau.rbind.io/), [Twitter](https://twitter.com/FabFuchs))
 
+**Slides (German)**
+
+Part I:
+[Brief introduction to R](https://fabianfox.github.io/Webscraping-Muenster-Slides/Crashkurs_R)
+
+Part II:
+[Web Scraping with R](https://fabianfox.github.io/Webscraping-Muenster-Slides/WebScraping-Muenster)
+
 **Requirements**
 
 The course will use R to illustrate the prospects and challenges of retrieving 
@@ -48,4 +56,3 @@ Also install the following packages:
 - [tidyverse](https://www.tidyverse.org/packages/)
 - [devtools](https://github.com/r-lib/devtools)
 - [janitor](https://github.com/sfirke/janitor)
-- [qdap](https://github.com/trinker/qdap)
