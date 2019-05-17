@@ -37,8 +37,7 @@ p_load(tidyverse, rvest, httr, robotstxt, qdap, janitor, lubridate,
 
 # Zur Präsentation
 
-- Folien sind online verfügbar: https://bit.ly/2Hw1pKl
-    - Folien herunterladen und im Browser öffnen
+- Folien sind online verfügbar: https://github.com/FabianFox/Webscraping-Muenster-Slides
 - Beispiele auf [GitHub](https://github.com/FabianFox/Webscraping-Muenster-)
 - Benötigte Pakete über: 
 

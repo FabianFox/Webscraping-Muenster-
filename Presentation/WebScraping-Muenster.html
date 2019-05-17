@@ -40,8 +40,7 @@ class: center, middle, inverse, title-slide
 
 # Zur Präsentation
 
-- Folien sind online verfügbar: https://bit.ly/2Hw1pKl
-    - Folien herunterladen und im Browser öffnen
+- Folien sind online verfügbar: https://github.com/FabianFox/Webscraping-Muenster-Slides
 - Beispiele auf [GitHub](https://github.com/FabianFox/Webscraping-Muenster-)
 - Benötigte Pakete über: 
 
@@ -150,7 +149,7 @@ response &lt;- GET("https://www.wahlrecht.de/umfragen/index.htm") %&gt;%
 
 ```
 ## Response [https://www.wahlrecht.de/umfragen/index.htm]
-##   Date: 2019-05-17 05:14
+##   Date: 2019-05-17 05:46
 ##   Status: 200
 ##   Content-Type: text/html
 ##   Size: 40.1 kB
@@ -507,8 +506,8 @@ str_view(string = "Wir benötigen nicht den gesamten Text, sondern die 42.",
          pattern = "[:digit:]+")
 ```
 
-<div id="htmlwidget-b2e98c29d7f1290ccdc2" style="width:960px;height:100%;" class="str_view html-widget"></div>
-<script type="application/json" data-for="htmlwidget-b2e98c29d7f1290ccdc2">{"x":{"html":"<ul>\n  <li>Wir benötigen nicht den gesamten Text, sondern die <span class='match'>42<\/span>.<\/li>\n<\/ul>"},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-fe3cf80a8279d13ab401" style="width:960px;height:100%;" class="str_view html-widget"></div>
+<script type="application/json" data-for="htmlwidget-fe3cf80a8279d13ab401">{"x":{"html":"<ul>\n  <li>Wir benötigen nicht den gesamten Text, sondern die <span class='match'>42<\/span>.<\/li>\n<\/ul>"},"evals":[],"jsHooks":[]}</script>
 
 ]
 
@@ -525,8 +524,8 @@ str_view(string = html.table$`CDU/CSU`[1:5],
          pattern = "[:digit:]+,?[:digit:]?")
 ```
 
-<div id="htmlwidget-4e2b1aef50bccb481a02" style="width:960px;height:100%;" class="str_view html-widget"></div>
-<script type="application/json" data-for="htmlwidget-4e2b1aef50bccb481a02">{"x":{"html":"<ul>\n  <li><span class='match'>30,0<\/span> %<\/li>\n  <li><span class='match'>30,0<\/span> %<\/li>\n  <li><span class='match'>30,0<\/span> %<\/li>\n  <li><span class='match'>31,5<\/span> %<\/li>\n  <li><span class='match'>29,0<\/span> %<\/li>\n<\/ul>"},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-90a111189e97ad8bcaa5" style="width:960px;height:100%;" class="str_view html-widget"></div>
+<script type="application/json" data-for="htmlwidget-90a111189e97ad8bcaa5">{"x":{"html":"<ul>\n  <li><span class='match'>30,0<\/span> %<\/li>\n  <li><span class='match'>30,0<\/span> %<\/li>\n  <li><span class='match'>30,0<\/span> %<\/li>\n  <li><span class='match'>31,5<\/span> %<\/li>\n  <li><span class='match'>29,0<\/span> %<\/li>\n<\/ul>"},"evals":[],"jsHooks":[]}</script>
 
 ---
 
