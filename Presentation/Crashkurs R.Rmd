@@ -34,11 +34,11 @@ p_load(tidyverse, rvest, httr, robotstxt, qdap, janitor, lubridate,
 
 .pull-left[
 
-Früher:
+**Früher:**
 
 R = schwer erlernbar
 
-Inzwischen:
+**Inzwischen:**
 
 - Onlinekurse
 - Bücher
@@ -96,6 +96,8 @@ include_graphics("Figures/data_types.PNG")
 ```
 
 Nachlesen: [Wickham (2019)](https://adv-r.hadley.nz/vectors-chap.html)
+
+---
 
 # Datentypen in R
 

@@ -34,11 +34,11 @@ class: center, middle, inverse, title-slide
 
 .pull-left[
 
-Früher:
+**Früher:**
 
 R = schwer erlernbar
 
-Inzwischen:
+**Inzwischen:**
 
 - Onlinekurse
 - Bücher
@@ -89,7 +89,27 @@ Nachlesen:
 
 # Datentypen
 
-&lt;img src="Figures/data_types.PNG" width="80%" /&gt;
+&lt;img src="Figures/data_types.PNG" width="60%" /&gt;
+
+Nachlesen: [Wickham (2019)](https://adv-r.hadley.nz/vectors-chap.html)
+
+---
+
+# Datentypen in R
+
+
+```r
+# Vector
+chr_vector &lt;- c("test1", "testX", "TEST")
+
+# Dataframe/tibble
+df &lt;- data.frame(ch = chr_vector,
+                 nmrc = c(1, 2, 3))
+
+# List
+tlist &lt;- list(e1 = df, 
+              chr_vector)
+```
 
 ---
 
