@@ -84,7 +84,7 @@ Ziele des Workshops:
 
 - positiv: big, always-on, nonreactive
 - negativ: incomplete, inaccessible, nonrepresentative, drifting, algorithmically 
-confounded, sensitive
+confounded, dirty, sensitive
 
 Quelle: [Salganik 2018: 17-41](https://www.bitbybitbook.com/en/1st-ed/observing-behavior/characteristics/)
 
@@ -150,7 +150,7 @@ response &lt;- GET("https://www.wahlrecht.de/umfragen/index.htm") %&gt;%
 
 ```
 ## Response [https://www.wahlrecht.de/umfragen/index.htm]
-##   Date: 2019-05-16 18:22
+##   Date: 2019-05-17 05:14
 ##   Status: 200
 ##   Content-Type: text/html
 ##   Size: 40.1 kB
@@ -267,7 +267,7 @@ HTML:
 - beinhaltet Informationen über den Stil der HTML-Seite
 - kann genutzt werden, um Informationen zu lokalisieren (CSS-Selektoren)
 
-&lt;img src="Figures/CSS-Example.PNG" width="30%" /&gt;
+&lt;img src="Figures/css_example.PNG" width="30%" /&gt;
 
 ---
 
@@ -292,7 +292,7 @@ Web Scraping-Projekte folgen einem generellen Schema:
 3. Information isolieren
 4. Iteration (loops)
 
-&lt;img src="Figures/data-science-workflow.PNG" width="50%" /&gt;
+&lt;img src="Figures/data_science_wflow.PNG" width="50%" /&gt;
 
 Quelle: [Wickham &amp; Grolemund (2018)](https://r4ds.had.co.nz/introduction.html)
 
@@ -300,7 +300,7 @@ Quelle: [Wickham &amp; Grolemund (2018)](https://r4ds.had.co.nz/introduction.htm
 
 # Web Scraping in R
 
-&lt;img src="Figures/rvest.PNG" width="8%" /&gt;
+&lt;img src="Figures/rvest_hex.PNG" width="8%" /&gt;
 
 .pull-left[
 
@@ -392,7 +392,7 @@ bearbeitet werden kann (z.B. Baumstruktur).
 Benötigt wird:
 
 - URL 
-- -&gt; Request/Response-Paar
+- Request/Response-Paar
 
 ---
 
@@ -482,7 +482,7 @@ html.table &lt;- html.node %&gt;%
 ## $ Sonstige  &lt;chr&gt; "4,0 %", "4,0 %", "4,0 %", "4,0 %", "4,0 %", "4,0 %"...
 ```
 
-zum Subsetting: [Wickham(2019)](https://adv-r.hadley.nz/subsetting.html)
+zum Subsetting: [Wickham (2019)](https://adv-r.hadley.nz/subsetting.html)
 
 ---
 
@@ -507,8 +507,8 @@ str_view(string = "Wir benötigen nicht den gesamten Text, sondern die 42.",
          pattern = "[:digit:]+")
 ```
 
-<div id="htmlwidget-a545bd50fca465ffcb38" style="width:960px;height:100%;" class="str_view html-widget"></div>
-<script type="application/json" data-for="htmlwidget-a545bd50fca465ffcb38">{"x":{"html":"<ul>\n  <li>Wir benötigen nicht den gesamten Text, sondern die <span class='match'>42<\/span>.<\/li>\n<\/ul>"},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-b2e98c29d7f1290ccdc2" style="width:960px;height:100%;" class="str_view html-widget"></div>
+<script type="application/json" data-for="htmlwidget-b2e98c29d7f1290ccdc2">{"x":{"html":"<ul>\n  <li>Wir benötigen nicht den gesamten Text, sondern die <span class='match'>42<\/span>.<\/li>\n<\/ul>"},"evals":[],"jsHooks":[]}</script>
 
 ]
 
@@ -525,8 +525,8 @@ str_view(string = html.table$`CDU/CSU`[1:5],
          pattern = "[:digit:]+,?[:digit:]?")
 ```
 
-<div id="htmlwidget-0792f598b47f426298b7" style="width:960px;height:100%;" class="str_view html-widget"></div>
-<script type="application/json" data-for="htmlwidget-0792f598b47f426298b7">{"x":{"html":"<ul>\n  <li><span class='match'>30,0<\/span> %<\/li>\n  <li><span class='match'>30,0<\/span> %<\/li>\n  <li><span class='match'>30,0<\/span> %<\/li>\n  <li><span class='match'>31,5<\/span> %<\/li>\n  <li><span class='match'>29,0<\/span> %<\/li>\n<\/ul>"},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-4e2b1aef50bccb481a02" style="width:960px;height:100%;" class="str_view html-widget"></div>
+<script type="application/json" data-for="htmlwidget-4e2b1aef50bccb481a02">{"x":{"html":"<ul>\n  <li><span class='match'>30,0<\/span> %<\/li>\n  <li><span class='match'>30,0<\/span> %<\/li>\n  <li><span class='match'>30,0<\/span> %<\/li>\n  <li><span class='match'>31,5<\/span> %<\/li>\n  <li><span class='match'>29,0<\/span> %<\/li>\n<\/ul>"},"evals":[],"jsHooks":[]}</script>
 
 ---
 
@@ -624,6 +624,8 @@ election.df &lt;- readRDS(gzcon(url("https://github.com/FabianFox/Webscraping-Mu
 - Informationen auf einer einzelnen Seite abfragen
 - Ausgangsseite mit Sucheinstellungen ([Link](https://www.spiegel.de/suche/?suchbegriff=Martin+Schulz&amp;suchzeitraum=ab2005&amp;suchbereich=header%2Ctitle%2Clead&amp;fromDate=01.01.2005&amp;quellenGroup=SPOX&amp;quellenGroup=SP))
 
+--
+
 
 ```r
 # Date: .search-teaser div
@@ -637,6 +639,8 @@ spon.df &lt;- read_html(url) %&gt;%            # Import
   html_text() 
 ```
 
+--
+
 ---
 
 # Scraping SPON: Iteration
@@ -644,7 +648,7 @@ spon.df &lt;- read_html(url) %&gt;%            # Import
 Sobald unser Scraper für eine Seite funktionieren, können wir sie generalisieren:
 
 - Funktionen ([Wickham 2019](https://adv-r.hadley.nz/functions.html))
-- Schleifen mit purrr ([Cheatsheet](https://www.rstudio.com/resources/cheatsheets/#purrr), [Wickham &amp; Grolemund 2017](https://r4ds.had.co.nz/iteration.html)) 
+- Schleifen mit ´purrr::map´ ([Cheatsheet](https://www.rstudio.com/resources/cheatsheets/#purrr), [Wickham &amp; Grolemund 2017](https://r4ds.had.co.nz/iteration.html)) 
 
 --
 
@@ -816,7 +820,7 @@ Dynamische Webseiten &amp; bot blocking:
 
 # Rechtliche Aspekte: Praxis
 
-Ziel: "friendly scraping" 
+**Ziel**: "friendly scraping" 
 
 - Server nicht überlasten ([crawl delay](https://rud.is/b/2017/07/28/analyzing-wait-delay-settings-in-common-crawl-robots-txt-data-with-r/))
     - `Sys.sleep` einbauen (~5-10 Sekunden)

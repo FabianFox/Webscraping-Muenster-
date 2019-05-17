@@ -80,7 +80,7 @@ Ziele des Workshops:
 
 - positiv: big, always-on, nonreactive
 - negativ: incomplete, inaccessible, nonrepresentative, drifting, algorithmically 
-confounded, sensitive
+confounded, dirty, sensitive
 
 Quelle: [Salganik 2018: 17-41](https://www.bitbybitbook.com/en/1st-ed/observing-behavior/characteristics/)
 
@@ -261,7 +261,7 @@ include_graphics("Figures/Wahlrecht-Tree.PNG")
 
 ```{r css_fig, out.width = "30%", echo = FALSE}
 # Source: https://en.wikipedia.org/wiki/Cascading_Style_Sheets
-include_graphics("Figures/CSS-Example.PNG")
+include_graphics("Figures/css_example.PNG")
 ```
 
 ---
@@ -292,7 +292,7 @@ Web Scraping-Projekte folgen einem generellen Schema:
 
 ```{r, out.width = "50%", echo = FALSE}
 # Source: https://r4ds.had.co.nz/introduction.html
-include_graphics("Figures/data-science-workflow.PNG")
+include_graphics("Figures/data_science_wflow.PNG")
 ```
 
 Quelle: [Wickham & Grolemund (2018)](https://r4ds.had.co.nz/introduction.html)
@@ -303,7 +303,7 @@ Quelle: [Wickham & Grolemund (2018)](https://r4ds.had.co.nz/introduction.html)
 
 ```{r, out.width = "8%", echo = FALSE}
 # Source: http://hexb.in/
-include_graphics("Figures/rvest.PNG")
+include_graphics("Figures/rvest_hex.PNG")
 ```
 
 .pull-left[
@@ -389,7 +389,7 @@ bearbeitet werden kann (z.B. Baumstruktur).
 Benötigt wird:
 
 - URL 
-- -> Request/Response-Paar
+- Request/Response-Paar
 
 ---
 
@@ -454,7 +454,7 @@ html.table <- html.node %>%
   glimpse()
 ```
 
-zum Subsetting: [Wickham(2019)](https://adv-r.hadley.nz/subsetting.html)
+zum Subsetting: [Wickham (2019)](https://adv-r.hadley.nz/subsetting.html)
 
 ---
 
@@ -664,6 +664,8 @@ include_graphics("Figures/schulzzug.PNG")
 - Informationen auf einer einzelnen Seite abfragen
 - Ausgangsseite mit Sucheinstellungen ([Link](https://www.spiegel.de/suche/?suchbegriff=Martin+Schulz&suchzeitraum=ab2005&suchbereich=header%2Ctitle%2Clead&fromDate=01.01.2005&quellenGroup=SPOX&quellenGroup=SP))
 
+--
+
 ```{r spon_single, echo = TRUE, eval = TRUE}
 # Date: .search-teaser div
 # Title: .search-teaser .headline
@@ -676,6 +678,8 @@ spon.df <- read_html(url) %>%            # Import
   html_text() 
 ```
 
+--
+
 ---
 
 # Scraping SPON: Iteration
@@ -683,7 +687,7 @@ spon.df <- read_html(url) %>%            # Import
 Sobald unser Scraper für eine Seite funktionieren, können wir sie generalisieren:
 
 - Funktionen ([Wickham 2019](https://adv-r.hadley.nz/functions.html))
-- Schleifen mit purrr ([Cheatsheet](https://www.rstudio.com/resources/cheatsheets/#purrr), [Wickham & Grolemund 2017](https://r4ds.had.co.nz/iteration.html)) 
+- Schleifen mit ´purrr::map´ ([Cheatsheet](https://www.rstudio.com/resources/cheatsheets/#purrr), [Wickham & Grolemund 2017](https://r4ds.had.co.nz/iteration.html)) 
 
 --
 
@@ -830,7 +834,7 @@ schulz.plot <- ggplot(spon.df) +
   scale_x_date(limits=as.Date(c("2016-12-01", "2018-02-28")), labels = scales::date_format("%b-%Y")) +
   labs(x = "", y = "", 
        title = "SPON-Artikel zu 'Martin Schulz'",
-       subtitle = "Artikel pro Woche (lagged um eine Woche)",
+       subtitle = "Artikel pro Woche (-1 Woche)",
        caption = "Spiegel.de (Archiv)") +
   theme_minimal() +
   theme(panel.grid.minor.x = element_blank(),
@@ -842,9 +846,9 @@ election2017.plot <- ggplot(subset(election.df, party == "SPD")) +
   geom_line(aes(x = zeitpunkt, y = vote, color = party), size = 1.5) +
   annotate(geom = "text", label = "Saarland-Wahl\n(SPD: 29,5%)", x = ymd("2017-03-24"), y = 4, size = 3) +
   annotate(geom = "rect", xmin =  ymd("2017-03-19"), xmax = ymd("2017-03-26"), ymin = 0, ymax = Inf, alpha = .2) +
-  annotate(geom = "text", label = "SH-Wahl\n(SPD: 27,3%)", x = ymd("2017-05-07"), y = 4, size = 3) +
+  annotate(geom = "text", label = "SH-Wahl\n(SPD: 27,3%)", x = ymd("2017-05-20"), y = 4, size = 3) +
   annotate(geom = "rect", xmin =  ymd("2017-05-07"), xmax = ymd("2017-05-12"), ymin = 0, ymax = Inf, alpha = .2) +
-  annotate(geom = "text", label = "NRW-Wahl\n(SPD: 31,2%)", x = ymd("2017-05-14"), y = 12, size = 3) +
+  annotate(geom = "text", label = "NRW-Wahl\n(SPD: 31,2%)", x = ymd("2017-05-20"), y = 15, size = 3) +
   annotate(geom = "rect", xmin =  ymd("2017-05-14"), xmax = ymd("2017-05-21"), ymin = 0, ymax = Inf, alpha = .2) +
   annotate(geom = "text", label = "BT-Wahl\n(SPD: 20,5%)", x = ymd("2017-09-24"), y = 8, size = 3) +
   annotate(geom = "rect", xmin =  ymd("2017-09-24"), xmax = ymd("2017-10-01"), ymin = 0, ymax = Inf, alpha = .2) +
@@ -932,7 +936,7 @@ ggplot(api.plot.df, aes(x = Submitted, y = cumulative.n)) +
 
 # Rechtliche Aspekte: Praxis
 
-Ziel: "friendly scraping" 
+**Ziel**: "friendly scraping" 
 
 - Server nicht überlasten ([crawl delay](https://rud.is/b/2017/07/28/analyzing-wait-delay-settings-in-common-crawl-robots-txt-data-with-r/))
     - `Sys.sleep` einbauen (~5-10 Sekunden)
